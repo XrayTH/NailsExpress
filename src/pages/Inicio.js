@@ -1,0 +1,1 @@
+//Lo que se cargara cuando el usuario este logueado, y cargara un componente distinto dependiendo de su tipo

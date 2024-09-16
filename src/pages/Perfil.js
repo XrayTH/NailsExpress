@@ -1,0 +1,2 @@
+//Pagina para los perfiles, que cambiara dependiendo de si es un profesional el ue mira su propio apartado (Puede hacer publicaciones y editarlo)
+//o si es un cliente viendo el apartado de un profesional (solo puede dejar reseñas)
