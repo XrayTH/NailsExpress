@@ -1,9 +1,9 @@
-import { api } from '../utils/api';
+import { userService } from '../utils/api';
 
 // Consultar todos los usuarios (clientes, profesionales y admins)
 export const getAllUsers = async () => {
   try {
-    const response = await api.get('/users');
+    const response = await userService.get('/users');
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error fetching users');
@@ -13,7 +13,7 @@ export const getAllUsers = async () => {
 // Consultar un usuario por ID
 export const getUserById = async (id) => {
   try {
-    const response = await api.get(`/users/${id}`);
+    const response = await userService.get(`/users/${id}`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error fetching user by ID');
@@ -23,7 +23,7 @@ export const getUserById = async (id) => {
 // Consultar un usuario por nombre de usuario
 export const getUserByUsuario = async (usuario) => {
   try {
-    const response = await api.get(`/users/usuario/${usuario}`);
+    const response = await userService.get(`/users/usuario/${usuario}`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error fetching user by username');
@@ -33,7 +33,7 @@ export const getUserByUsuario = async (usuario) => {
 // Consultar un usuario por email
 export const getUserByEmail = async (email) => {
   try {
-    const response = await api.get(`/users/email/${email}`);
+    const response = await userService.get(`/users/email/${email}`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error fetching user by email');

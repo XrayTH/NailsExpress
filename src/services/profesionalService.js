@@ -1,9 +1,9 @@
-import { api } from '../utils/api'; // Ajusta la ruta según la estructura de tu proyecto
+import { userService } from '../utils/api'; // Ajusta la ruta según la estructura de tu proyecto
 
 // Consultar todos los profesionales
 export const getAllProfesionales = async () => {
   try {
-    const response = await api.get('/profesionales');
+    const response = await userService.get('/profesionales');
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error fetching professionals');
@@ -13,7 +13,7 @@ export const getAllProfesionales = async () => {
 // Consultar un profesional por ID
 export const getProfesionalById = async (id) => {
   try {
-    const response = await api.get(`/profesionales/${id}`);
+    const response = await userService.get(`/profesionales/${id}`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error fetching professional by ID');
@@ -23,7 +23,7 @@ export const getProfesionalById = async (id) => {
 // Consultar un profesional por email
 export const getProfesionalByEmail = async (email) => {
   try {
-    const response = await api.get(`/profesionales/email/${email}`);
+    const response = await userService.get(`/profesionales/email/${email}`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error fetching professional by email');
@@ -33,7 +33,7 @@ export const getProfesionalByEmail = async (email) => {
 // Consultar un profesional por nombre de usuario
 export const getProfesionalByUsername = async (username) => {
   try {
-    const response = await api.get(`/profesionales/username/${username}`);
+    const response = await userService.get(`/profesionales/username/${username}`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error fetching professional by username');
@@ -43,7 +43,7 @@ export const getProfesionalByUsername = async (username) => {
 // Crear un nuevo profesional
 export const createProfesional = async (profesionalData) => {
   try {
-    const response = await api.post('/profesionales', profesionalData);
+    const response = await userService.post('/profesionales', profesionalData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error creating professional');
@@ -53,7 +53,7 @@ export const createProfesional = async (profesionalData) => {
 // Actualizar un profesional existente
 export const updateProfesional = async (id, profesionalData) => {
   try {
-    const response = await api.put(`/profesionales/${id}`, profesionalData);
+    const response = await userService.put(`/profesionales/${id}`, profesionalData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error updating professional');
@@ -63,7 +63,7 @@ export const updateProfesional = async (id, profesionalData) => {
 // Eliminar un profesional
 export const deleteProfesional = async (id) => {
   try {
-    await api.delete(`/profesionales/${id}`);
+    await userService.delete(`/profesionales/${id}`);
     return { message: 'Professional deleted successfully' };
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error deleting professional');

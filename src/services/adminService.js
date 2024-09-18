@@ -1,9 +1,9 @@
-import { api } from '../utils/api'; // Ajusta la ruta según tu estructura de archivos
+import { userService } from '../utils/api'; // Ajusta la ruta según tu estructura de archivos
 
 // Consultar todos los administradores
 export const getAllAdmins = async () => {
   try {
-    const response = await api.get('/admins');
+    const response = await userService.get('/admins');
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error fetching admins');
@@ -13,7 +13,7 @@ export const getAllAdmins = async () => {
 // Crear un nuevo administrador
 export const createAdmin = async (adminData) => {
   try {
-    const response = await api.post('/admins', adminData);
+    const response = await userService.post('/admins', adminData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error creating admin');
@@ -23,7 +23,7 @@ export const createAdmin = async (adminData) => {
 // Modificar un administrador existente
 export const updateAdmin = async (id, adminData) => {
   try {
-    const response = await api.put(`/admins/${id}`, adminData);
+    const response = await userService.put(`/admins/${id}`, adminData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error updating admin');
@@ -33,7 +33,7 @@ export const updateAdmin = async (id, adminData) => {
 // Borrar un administrador
 export const deleteAdmin = async (id) => {
   try {
-    await api.delete(`/admins/${id}`);
+    await userService.delete(`/admins/${id}`);
     return { message: 'Admin deleted successfully' };
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error deleting admin');
