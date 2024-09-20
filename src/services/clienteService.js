@@ -69,3 +69,12 @@ export const deleteCliente = async (id) => {
     throw new Error(error.response?.data?.message || 'Error deleting client');
   }
 };
+
+export const toggleClienteActiveStatus = async (email) => {
+  try {
+    const response = await userService.patch(`/clientes/${email}/toggle-active`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error toggling client active status');
+  }
+};

@@ -69,3 +69,12 @@ export const deleteProfesional = async (id) => {
     throw new Error(error.response?.data?.message || 'Error deleting professional');
   }
 };
+
+export const toggleProfesionalActiveStatus = async (email) => {
+  try {
+    const response = await userService.patch(`/profesionales/${email}/toggle-active`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error toggling professional active status');
+  }
+};

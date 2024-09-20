@@ -39,3 +39,12 @@ export const deleteAdmin = async (id) => {
     throw new Error(error.response?.data?.message || 'Error deleting admin');
   }
 };
+
+export const toggleAdminActiveStatus = async (email) => {
+  try {
+    const response = await userService.patch(`/admins/${email}/toggle-active`);
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Error toggling admin active status');
+  }
+};
