@@ -10,10 +10,20 @@ const profileService = axios.create({
   timeout: 1000,
 });
 
+const domicileService = axios.create({
+  baseURL: ""+process.env.REACT_APP_DOMICILE_URL,
+  timeout: 1000,
+});
+
 const imageService = axios.create({
   baseURL: ""+process.env.REACT_APP_IMAGES_URL,
   timeout: 1000,
 });
 
-export { userService, profileService, imageService };
+const emailService = axios.create({
+  baseURL: ""+process.env.REACT_APP_EMAIL_URL,
+  timeout: 1000,
+});
+
+export { userService, profileService, domicileService, imageService, emailService };
 
