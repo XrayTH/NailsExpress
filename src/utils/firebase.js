@@ -1,5 +1,8 @@
+// firebase.js
+
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore'; // Importar Firestore
 
 const firebaseConfig = {
     apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -10,8 +13,14 @@ const firebaseConfig = {
     appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
 
+// Inicializa la aplicación de Firebase
 const firebaseApp = initializeApp(firebaseConfig);
 
+// Inicializa la autenticación
 const auth = getAuth(firebaseApp);
 
-export { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut };
+// Inicializa Firestore
+const db = getFirestore(firebaseApp); // Inicializar Firestore
+
+// Exportar autenticación y Firestore
+export { auth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, db }; // Asegúrate de exportar db
