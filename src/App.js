@@ -13,6 +13,7 @@ import PruebaImagen from './components/pruebas/PruebaImagen';
 import PrivateRoute from './components/seguridad/PrivateRoute'; // Importa el componente de rutas privadas
 import { selectUser } from './features/userSlice'; // Importa el selector para verificar el estado de autenticación
 import NotFound from './components/seguridad/NotFound';
+import { selectAuthUser } from './features/authSlice';
 
 const Prueba = () => {
   return (
@@ -25,7 +26,9 @@ const Prueba = () => {
 };
 
 function App() {
-  const user = useSelector(selectUser); // Verifica si el usuario está logueado
+  const user = useSelector(selectUser); 
+  const auth = useSelector(selectAuthUser);
+  console.log(Boolean(user && auth))
 
   return (
     <Router>
@@ -36,11 +39,11 @@ function App() {
         {/* Redirige a /home si el usuario ya está logueado */}
         <Route
           path='/login'
-          element={user ? <Navigate to="/home" /> : <Login />}
+          element={user && auth ? <Navigate to="/home" /> : <Login />}
         />
         <Route
           path='/Registro'
-          element={user ? <Navigate to="/home" /> : <Registro />}
+          element={user && auth ? <Navigate to="/home" /> : <Registro />}
         />
 
         {/* Rutas protegidas: solo accesibles si el usuario está logueado */}
