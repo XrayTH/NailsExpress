@@ -34,16 +34,16 @@ function App() {
     <Router>
       <Routes>
         {/* Ruta pública */}
-        <Route path='/' element={<Home />} />
+        <Route path='/' element={user && auth ? <Inicio /> : <Home />} />
 
         {/* Redirige a /home si el usuario ya está logueado */}
         <Route
           path='/login'
-          element={user && auth ? <Navigate to="/home" /> : <Login />}
+          element={user && auth ? <Navigate to="/" /> : <Login />}
         />
         <Route
           path='/Registro'
-          element={user && auth ? <Navigate to="/home" /> : <Registro />}
+          element={user && auth ? <Navigate to="/" /> : <Registro />}
         />
 
         {/* Rutas protegidas: solo accesibles si el usuario está logueado */}
