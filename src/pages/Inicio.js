@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { auth } from '../utils/firebase'; // Asegúrate de que la ruta sea correcta
+import { useDispatch } from 'react-redux'; // Importa useDispatch
+import { logout } from '../features/authSlice'; // Importa logout de authSlice
+import { logoutUser } from '../features/userSlice'; // Importa logoutUser de userSlice
 
 const Inicio = () => {
+    const dispatch = useDispatch(); // Crea el dispatch
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
@@ -100,9 +104,14 @@ const Inicio = () => {
         };
     }, []);
 
+    const handleLogout = async () => {
+        await dispatch(logout()); // Despacha la acción de logout
+        await dispatch(logoutUser()); // Despacha la acción de logoutUser
+    };
+
     return (
         <div className="bg-gray-100">
-            <Navbar />
+            <Navbar onLogout={handleLogout} />
             <HeroSection isAuthenticated={isAuthenticated} />
             <Testimonials />
             <CallToAction />
@@ -110,7 +119,7 @@ const Inicio = () => {
     );
 };
 
-const Navbar = () => {
+const Navbar = ({ onLogout }) => {
     return (
         <header className="bg-pink-600 text-white shadow-md">
             <div className="container mx-auto p-4 flex justify-between items-center">
@@ -121,11 +130,9 @@ const Navbar = () => {
                             Ver Mapa
                         </button>
                     </Link>
-                    <Link to="/Home">
-                        <button className="bg-white text-purple-500 py-2 px-4 rounded-full hover:bg-gray-200 mr-2">
-                            Salir
-                        </button>
-                    </Link>
+                    <button onClick={onLogout} className="bg-white text-purple-500 py-2 px-4 rounded-full hover:bg-gray-200 mr-2">
+                        Cerrar Sesión
+                    </button>
                     <div style={{ fontSize: '1.125rem' }}>Nombre usuario | Cliente</div>
                 </div>
             </div>
@@ -137,7 +144,7 @@ const HeroSection = ({ isAuthenticated }) => {
     return (
         <section className="hero-bg">
             <div className="overlay">
-            <img src="https://www.cursosypostgrados.com/blog/wp-content/uploads/2024/09/manicura-chicadeazul.webp" alt="foto" />
+                <img src="https://www.cursosypostgrados.com/blog/wp-content/uploads/2024/09/manicura-chicadeazul.webp" alt="foto" />
             </div>
             <div className="hero-content text-center text-white">
                 <h2 className="text-5xl font-semibold mb-4">{isAuthenticated ? 'Bienvenido de nuevo!' : 'Manicure a Domicilio'}</h2>

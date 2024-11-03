@@ -3,6 +3,8 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { auth, createUserWithEmailAndPassword } from '../utils/firebase';
 import { login } from '../features/authSlice';
+import { createCliente } from '../services/clienteService'; // Importa la función correcta
+import { createProfesional } from '../services/profesionalService'; // Importa la función correcta
 
 const Registro = () => {
     const dispatch = useDispatch();
@@ -32,6 +34,27 @@ const Registro = () => {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
+            // Crear el cliente o profesional en la base de datos
+            if (role === 'cliente') {
+                await createCliente({
+                    usuario: username, // Cambiado a 'usuario'
+                    email: user.email,
+                    contraseña: password, // Cambiado a 'contraseña'
+                    telefono: telefono,
+                });
+            } else {
+                await createProfesional({
+                    usuario: username, // Cambiado a 'usuario'
+                    email: user.email,
+                    contraseña: password, // Cambiado a 'contraseña'
+                    telefono: e.target.telefono.value,
+                    nombreCompleto: e.target.nombreCompleto.value,
+                    nombreLocal: e.target.nombreLocal.value,
+                    pais: e.target.pais.value,
+                    departamento: e.target.departamento.value,
+                });
+            }
+
             // Despachar la acción de login con la información del usuario
             dispatch(login({
                 uid: user.uid,
@@ -50,7 +73,7 @@ const Registro = () => {
     };
 
     const handleBack = () => {
-        navigate('/');
+        navigate('/'); // Redirigir a la página de inicio
     };
 
     const styles = {
@@ -82,8 +105,8 @@ const Registro = () => {
             width: "90%",
             maxWidth: "500px",
             marginTop: "20px",
-            overflowY: "auto", // Permite scroll si es necesario
-            maxHeight: "80vh", // Limita la altura del formulario
+            overflowY: "auto",
+            maxHeight: "80vh",
         },
         formTitle: {
             fontSize: "1.5rem",

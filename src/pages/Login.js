@@ -4,6 +4,9 @@ import { auth } from '../utils/firebase'; // Asegúrate de que esta ruta sea cor
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useDispatch } from 'react-redux';
 import { login } from '../features/authSlice';
+import { getClienteByEmail } from '../services/clienteService'; // Importa la función correcta
+import { getProfesionalByEmail } from '../services/profesionalService'; // Importa la función correcta
+import { setUser } from '../features/userSlice'; // Importa para guardar el usuario
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -18,15 +21,28 @@ const LoginPage = () => {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
+            // Obtener detalles del usuario dependiendo de su rol
+            let userDetails;
+            try {
+                userDetails = await getClienteByEmail(email);
+            } catch {
+                userDetails = await getProfesionalByEmail(email);
+            }
+
             // Despachar la acción de login con la información del usuario
             dispatch(login({
                 uid: user.uid,
                 email: user.email,
             }));
 
+            // Guardar detalles del usuario en el slice
+            dispatch(setUser({
+                user: userDetails,
+                userType: userDetails.role,
+            }));
+
             console.log("Inicio de sesión exitoso con:", email);
-            // Redirige a la página de inicio después del inicio de sesión
-            navigate('/Inicio');
+            navigate('/Inicio'); // Redirigir a la página de inicio
         } catch (error) {
             console.error("Error al iniciar sesión:", error);
             alert("Error al iniciar sesión. Por favor verifica tus credenciales.");
@@ -34,10 +50,10 @@ const LoginPage = () => {
     };
 
     const handleBack = () => {
-        // Redirige a la página de inicio
-        navigate('/');
+        navigate('/Inicio'); // Redirigir a la página de inicio
     };
 
+    // Estilos como ya los tenías
     const styles = {
         loginPage: {
             fontFamily: "'Poppins', sans-serif",
