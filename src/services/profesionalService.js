@@ -43,7 +43,7 @@ export const getProfesionalByUsername = async (username) => {
 // Crear un nuevo profesional
 export const createProfesional = async (profesionalData) => {
   try {
-    const response = await userService.post('/profesionales', profesionalData);
+    const response = await userService.post('/profesional', profesionalData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error creating professional');

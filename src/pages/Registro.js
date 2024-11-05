@@ -3,13 +3,12 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { auth, createUserWithEmailAndPassword } from '../utils/firebase';
 import { login } from '../features/authSlice';
-import { createCliente } from '../services/clienteService'; // Importa la función correcta
-import { createProfesional } from '../services/profesionalService'; // Importa la función correcta
+import { createProfesional } from '../services/profesionalService';
 
 const Registro = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
-    const [role, setRole] = useState('cliente'); // 'cliente' o 'profesional'
+    const [role, setRole] = useState('cliente');
     const [error, setError] = useState('');
 
     const handleRegister = async (e) => {
@@ -17,54 +16,76 @@ const Registro = () => {
         const email = e.target.email.value;
         const password = e.target.password.value;
         const username = e.target.username.value;
-        const telefono = e.target.telefono?.value; // Obtener teléfono si es cliente
+        const nombre = e.target.nombre?.value; // Solo para profesional
+        const telefono = e.target.telefono?.value;
 
-        // Recolecta información adicional dependiendo del rol
         const additionalData = role === 'profesional' ? {
-            nombreCompleto: e.target.nombreCompleto.value,
             nombreLocal: e.target.nombreLocal.value,
             telefono: e.target.telefono.value,
             pais: e.target.pais.value,
             departamento: e.target.departamento.value,
+            ciudad: e.target.ciudad.value,
+            direccion: e.target.direccion.value,
         } : {
-            telefono // Solo se agrega si es cliente
+            telefono
         };
 
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
-            // Crear el cliente o profesional en la base de datos
-            if (role === 'cliente') {
-                await createCliente({
-                    usuario: username, // Cambiado a 'usuario'
+            let latLng = {};
+            if (role === 'profesional') {
+                const query = `${additionalData.direccion}, ${additionalData.ciudad}, ${additionalData.departamento}, ${additionalData.pais}`;
+                const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`;
+
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    latLng = {
+                        lat: parseFloat(data[0].lat),
+                        lng: parseFloat(data[0].lon)
+                    };
+                } else {
+                    alert('No se encontraron coordenadas para la dirección proporcionada.');
+                    return;
+                }
+            }
+
+            if (role === 'profesional') {
+                console.log("Datos para el profesional:", {
+                    usuario: username,
                     email: user.email,
-                    contraseña: password, // Cambiado a 'contraseña'
-                    telefono: telefono,
+                    contraseña: password,
+                    nombre, // Se agrega el nombre
+                    nombreLocal: additionalData.nombreLocal,
+                    telefono: additionalData.telefono,
+                    ubicacion: { lat: latLng.lat, lng: latLng.lng },
+                    activo: true,
                 });
-            } else {
+
                 await createProfesional({
-                    usuario: username, // Cambiado a 'usuario'
+                    usuario: username,
                     email: user.email,
-                    contraseña: password, // Cambiado a 'contraseña'
-                    telefono: e.target.telefono.value,
-                    nombreCompleto: e.target.nombreCompleto.value,
-                    nombreLocal: e.target.nombreLocal.value,
-                    pais: e.target.pais.value,
-                    departamento: e.target.departamento.value,
+                    contraseña: password,
+                    nombre, // Se agrega el nombre
+                    nombreLocal: additionalData.nombreLocal,
+                    telefono: additionalData.telefono,
+                    ubicacion: { lat: latLng.lat, lng: latLng.lng },
+                    activo: true,
                 });
             }
 
-            // Despachar la acción de login con la información del usuario
             dispatch(login({
                 uid: user.uid,
                 email: user.email,
-                username, // Incluye el nombre de usuario
-                role, // Incluye el rol del usuario
-                ...additionalData, // Incluye datos adicionales si es profesional
+                username,
+                role,
+                nombre, // Se agrega el nombre
+                ...additionalData,
             }));
 
-            // Redirigir a la página de inicio
             navigate('/Inicio');
         } catch (error) {
             console.error("Error al registrarse:", error);
@@ -73,7 +94,7 @@ const Registro = () => {
     };
 
     const handleBack = () => {
-        navigate('/'); // Redirigir a la página de inicio
+        navigate('/');
     };
 
     const styles = {
@@ -149,7 +170,6 @@ const Registro = () => {
                 <h2 style={styles.formTitle}>Registro</h2>
                 {error && <p style={styles.errorText}>{error}</p>}
                 
-                {/* Selector de rol */}
                 <label style={styles.formLabel}>Registro como:</label>
                 <select
                     value={role}
@@ -161,6 +181,13 @@ const Registro = () => {
                 </select>
 
                 <form onSubmit={handleRegister}>
+                    {role === 'profesional' && (
+                        <>
+                            <label style={styles.formLabel}>Nombre</label>
+                            <input type="text" name="nombre" style={styles.formInput} required />
+                        </>
+                    )}
+
                     <label style={styles.formLabel}>Nombre de Usuario</label>
                     <input type="text" name="username" style={styles.formInput} required />
 
@@ -170,18 +197,8 @@ const Registro = () => {
                     <label style={styles.formLabel}>Contraseña</label>
                     <input type="password" name="password" style={styles.formInput} required />
 
-                    {role === 'cliente' && (
-                        <>
-                            <label style={styles.formLabel}>Teléfono</label>
-                            <input type="text" name="telefono" style={styles.formInput} required />
-                        </>
-                    )}
-
                     {role === 'profesional' && (
                         <>
-                            <label style={styles.formLabel}>Nombre Completo</label>
-                            <input type="text" name="nombreCompleto" style={styles.formInput} required />
-
                             <label style={styles.formLabel}>Nombre del Local</label>
                             <input type="text" name="nombreLocal" style={styles.formInput} required />
 
@@ -193,6 +210,12 @@ const Registro = () => {
 
                             <label style={styles.formLabel}>Departamento</label>
                             <input type="text" name="departamento" style={styles.formInput} required />
+
+                            <label style={styles.formLabel}>Ciudad</label>
+                            <input type="text" name="ciudad" style={styles.formInput} required />
+
+                            <label style={styles.formLabel}>Dirección</label>
+                            <input type="text" name="direccion" style={styles.formInput} required />
                         </>
                     )}
 
