@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth } from '../utils/firebase'; // Asegúrate de que esta ruta sea correcta
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -7,15 +7,19 @@ import { login } from '../features/authSlice';
 import { getClienteByEmail } from '../services/clienteService'; // Importa la función correcta
 import { getProfesionalByEmail } from '../services/profesionalService'; // Importa la función correcta
 import { setUser } from '../features/userSlice'; // Importa para guardar el usuario
+import { CircularProgress } from '@material-ui/core'; // Importa CircularProgress
 
 const LoginPage = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const [loading, setLoading] = useState(false);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         const email = e.target.email.value;
         const password = e.target.password.value;
+        
+        setLoading(true); // Activar el indicador de carga
 
         try {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -46,14 +50,15 @@ const LoginPage = () => {
         } catch (error) {
             console.error("Error al iniciar sesión:", error);
             alert("Error al iniciar sesión. Por favor verifica tus credenciales.");
+        } finally {
+            setLoading(false); // Desactivar el indicador de carga
         }
     };
 
     const handleBack = () => {
-        navigate('/Inicio'); // Redirigir a la página de inicio
+        navigate('/'); // Redirigir a la página de inicio
     };
 
-    // Estilos como ya los tenías
     const styles = {
         loginPage: {
             fontFamily: "'Poppins', sans-serif",
@@ -154,12 +159,16 @@ const LoginPage = () => {
                                 required
                             />
 
-                            <button
-                                type="submit"
-                                style={styles.btnGradient}
-                            >
-                                Iniciar Sesión
-                            </button>
+                            {loading ? (
+                                <CircularProgress />
+                            ) : (
+                                <button
+                                    type="submit"
+                                    style={styles.btnGradient}
+                                >
+                                    Iniciar Sesión
+                                </button>
+                            )}
 
                             <button
                                 type="button"
