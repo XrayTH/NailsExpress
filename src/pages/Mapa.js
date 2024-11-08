@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Link } from 'react-router-dom';
+//import { Link } from 'react-router-dom';
 
 const MapPage = () => {
     const [map, setMap] = useState(null);
@@ -76,14 +76,17 @@ const MapPage = () => {
             fontWeight: "bold",
         },
         navbarSearch: {
+            height: "100%",
             display: "flex",
         },
         searchInput: {
+            height: "55%",
             padding: "0.5rem",
             borderRadius: "0.375rem 0 0 0.375rem", // rounded-l-md
             border: "1px solid #ccc",
         },
         searchButton: {
+            height: "100%",
             backgroundColor: "white",
             color: "#7e22ce", // text-purple-500
             padding: "0.5rem",
@@ -99,31 +102,53 @@ const MapPage = () => {
             fontSize: "1.125rem", // text-lg
         },
         sidebar: {
-            marginRight: "2rem", // mr-8
-            width: "25%", // w-1/4
-            backgroundColor: "white", // Fondo del sidebar
-            borderRadius: "0.625rem", // rounded-md
-            padding: "1rem", // Padding para el sidebar
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)", // Sombra
+            marginRight: "2rem",
+            width: "18%",
+            backgroundColor: "white",
+            borderRadius: "0.625rem",
+            padding: "1rem",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center", // Centra los elementos horizontalmente
         },
         sidebarTitle: {
-            fontSize: "1.25rem", // text-xl
+            fontSize: "1.25rem",
             fontWeight: "bold",
-            marginBottom: "1rem", // mb-4
+            marginBottom: "1rem",
+            textAlign: "center", // Centra el título
         },
         btnGradient: {
             background: "linear-gradient(90deg, rgba(127, 27, 221, 1) 0%, rgba(255, 105, 180, 1) 100%)",
             color: "white",
-            padding: "0.5rem 1rem", // py-2 px-4
-            borderRadius: "9999px", // rounded-full
-            marginTop: "1.5rem", // mt-6
-            border: "none", // Sin borde
-            cursor: "pointer", // Cursor pointer para el botón
+            padding: "0.75rem 1rem",
+            borderRadius: "0.9rem",
+            margin: "0.9rem 0",
+            border: "none",
+            cursor: "pointer",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.2)",
+            transition: "transform 0.3s ease, box-shadow 0.3s ease",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "60%",
+        },
+        btnGradientHover: {
+            transform: "scale(1.05)",
+            boxShadow: "0 6px 12px rgba(0, 0, 0, 0.3)",
         },
         leafletContainer: {
-            height: "500px", // Altura del mapa
-            width: "75%", // 75% del ancho del contenedor
-            borderRadius: "0.625rem", // rounded-md
+            height: "500px",
+            width: "75%",
+            borderRadius: "0.625rem",
+        },
+        serviceSelect: {
+            padding: "0.5rem",
+            borderRadius: "0.375rem",
+            border: "1px solid #ccc",
+            width: "60%",
+            marginBottom: "1rem",
+            outline: "none",
         },
     };
 
@@ -147,17 +172,53 @@ const MapPage = () => {
             <div style={{ display: "flex", flex: 1, padding: "2rem" }}>
                 <div style={styles.sidebar}>
                     <h3 style={styles.sidebarTitle}>Filtros de Ubicación</h3>
-                    <button id="geolocate" onClick={handleGeolocate} style={styles.btnGradient}>
+                    <button 
+                        id="geolocate" 
+                        onClick={handleGeolocate} 
+                        style={styles.btnGradient}
+                        onMouseOver={e => {
+                            e.currentTarget.style.transform = styles.btnGradientHover.transform;
+                            e.currentTarget.style.boxShadow = styles.btnGradientHover.boxShadow;
+                        }}
+                        onMouseOut={e => {
+                            e.currentTarget.style.transform = "scale(1)";
+                            e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
+                        }}
+                    >
                         Geolocalizarme
                     </button>
-                    <button style={styles.btnGradient}>Domicilio</button>
+                    <button 
+                        style={styles.btnGradient}
+                        onMouseOver={e => {
+                            e.currentTarget.style.transform = styles.btnGradientHover.transform;
+                            e.currentTarget.style.boxShadow = styles.btnGradientHover.boxShadow;
+                        }}
+                        onMouseOut={e => {
+                            e.currentTarget.style.transform = "scale(1)";
+                            e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
+                        }}
+                    >
+                        Domicilio
+                    </button>
                     <h3 style={styles.sidebarTitle}>Servicios</h3>
                     <select className="service-select" style={styles.serviceSelect}>
                         <option>Manicura</option>
                         <option>Pedicura</option>
                         <option>Uñas acrílicas</option>
                     </select>
-                    <button style={styles.btnGradient}>Filtrar</button>
+                    <button 
+                        style={styles.btnGradient}
+                        onMouseOver={e => {
+                            e.currentTarget.style.transform = styles.btnGradientHover.transform;
+                            e.currentTarget.style.boxShadow = styles.btnGradientHover.boxShadow;
+                        }}
+                        onMouseOut={e => {
+                            e.currentTarget.style.transform = "scale(1)";
+                            e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
+                        }}
+                    >
+                        Filtrar
+                    </button>
                 </div>
 
                 <div id="map" style={styles.leafletContainer}></div>

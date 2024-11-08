@@ -1,59 +1,91 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth } from '../utils/firebase'; // Asegúrate de que esta ruta sea correcta
+import { auth } from '../utils/firebase'; // Verifica que la ruta sea correcta
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../features/authSlice';
-import { getClienteByEmail } from '../services/clienteService'; // Importa la función correcta
-import { getProfesionalByEmail } from '../services/profesionalService'; // Importa la función correcta
-import { setUser } from '../features/userSlice'; // Importa para guardar el usuario
-import { CircularProgress } from '@material-ui/core'; // Importa CircularProgress
+import { setUser, selectUserType, setStatus, setError } from '../features/userSlice';
+import { CircularProgress } from '@material-ui/core';
+import { getClienteByEmail } from '../services/clienteService';
+import { getProfesionalByEmail } from '../services/profesionalService';
 
 const LoginPage = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [loading, setLoading] = useState(false);
+    const backgroundImageUrl = "https://www.cursosypostgrados.com/blog/wp-content/uploads/2024/09/manicura-chicadeazul.webp";
 
     const handleLogin = async (e) => {
         e.preventDefault();
         const email = e.target.email.value;
         const password = e.target.password.value;
-        
+    
         setLoading(true); // Activar el indicador de carga
-
+    
         try {
+            let userTypeDetected = null;
+    
+            // Verificar si el usuario es un cliente
+            try {
+                const clienteData = await getClienteByEmail(email);
+                if (clienteData) {
+                    userTypeDetected = 'cliente';
+                    dispatch(setUser({
+                        user: { email, role: 'cliente' },
+                        userType: 'cliente',
+                    }));
+                } else {
+                    throw new Error('Cliente no encontrado');
+                }
+            } catch {
+                // Si no es cliente, intentar verificar si es un profesional
+                try {
+                    const profesionalData = await getProfesionalByEmail(email);
+                    if (profesionalData) {
+                        userTypeDetected = 'profesional';
+                        dispatch(setUser({
+                            user: { email, role: 'profesional' },
+                            userType: 'profesional',
+                        }));
+                    } else {
+                        throw new Error('Profesional no encontrado');
+                    }
+                } catch (error) {
+                    console.error("Error al detectar el tipo de usuario:", error);
+                    alert("No se pudo identificar el tipo de usuario.");
+                    setLoading(false);
+                    return;
+                }
+            }
+    
+            // Realizar el inicio de sesión con Firebase
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-
-            // Obtener detalles del usuario dependiendo de su rol
-            let userDetails;
-            try {
-                userDetails = await getClienteByEmail(email);
-            } catch {
-                userDetails = await getProfesionalByEmail(email);
-            }
-
+    
             // Despachar la acción de login con la información del usuario
             dispatch(login({
                 uid: user.uid,
                 email: user.email,
             }));
-
-            // Guardar detalles del usuario en el slice
-            dispatch(setUser({
-                user: userDetails,
-                userType: userDetails.role,
-            }));
-
+    
+            // Esperar la actualización del estado de userType y navegar después
+            setTimeout(() => {
+                console.log("userTypeDetected after delay:", userTypeDetected);  // Verifica si userTypeDetected es correcto
+                if (userTypeDetected === 'cliente') {
+                    navigate('/Inicio');
+                } else if (userTypeDetected === 'profesional') {
+                    navigate('/InicioPro');
+                }
+            }, 100);  // Puedes ajustar el tiempo si es necesario
+    
             console.log("Inicio de sesión exitoso con:", email);
-            navigate('/Inicio'); // Redirigir a la página de inicio
         } catch (error) {
             console.error("Error al iniciar sesión:", error);
             alert("Error al iniciar sesión. Por favor verifica tus credenciales.");
         } finally {
             setLoading(false); // Desactivar el indicador de carga
         }
-    };
+    };    
 
     const handleBack = () => {
         navigate('/'); // Redirigir a la página de inicio
@@ -65,7 +97,7 @@ const LoginPage = () => {
             height: "100vh",
             display: "flex",
             flexDirection: "column",
-            background: "url('Nails imagen.jpg') no-repeat center center fixed",
+            backgroundImage: `url(${backgroundImageUrl})`,
             backgroundSize: "cover",
             position: "relative",
         },
@@ -74,8 +106,8 @@ const LoginPage = () => {
             color: '#fff',
             padding: '1rem',
             textAlign: 'left',
-            width: '100%',
-            marginBottom: '1rem',
+            width: '97,8%',
+            //marginBottom: '1rem',
             boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
         },
         overlay: {
@@ -84,7 +116,8 @@ const LoginPage = () => {
             left: 0,
             width: "100%",
             height: "100%",
-            background: "rgba(255, 255, 255, 0.85)",
+            //background: "#a959f5",
+            
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
@@ -125,6 +158,7 @@ const LoginPage = () => {
             marginTop: "1.5rem",
             transition: "background 0.3s ease",
             margin: '10px',
+            cursor: 'pointer',
         },
     };
 
@@ -160,23 +194,29 @@ const LoginPage = () => {
                             />
 
                             {loading ? (
-                                <CircularProgress />
+                                <CircularProgress
+                                style={{color: '#ec4899',}}
+                                />
                             ) : (
-                                <button
+                                <>
+                                 <button
                                     type="submit"
                                     style={styles.btnGradient}
                                 >
-                                    Iniciar Sesión
+                                    Iniciar sesión
                                 </button>
-                            )}
-
-                            <button
+                                
+                                <button
                                 type="button"
                                 onClick={handleBack}
                                 style={styles.btnGradient}
                             >
-                                Volver Atrás
-                            </button>
+                                Volver atrás
+                            </button> 
+                            </>
+                            )}
+
+                            
                         </form>
                     </div>
                 </div>
@@ -184,5 +224,4 @@ const LoginPage = () => {
         </div>
     );
 };
-
 export default LoginPage;

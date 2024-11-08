@@ -5,6 +5,7 @@ import UserList from './components/pruebas/UserList';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import Inicio from './pages/Inicio';
+import InicioPro from './pages/InicioPro';
 import Perfil from './pages/Perfil';
 import Registro from './pages/Registro';
 import Mapa from './pages/Mapa';
@@ -35,6 +36,8 @@ function App() {
       <Routes>
         {/* Ruta pública */}
         <Route path='/' element={user && auth ? <Inicio /> : <Home />} />
+         {/* Ruta pública */}
+         <Route path='/' element={user && auth ? <InicioPro /> : <Home />} />
 
         {/* Redirige a /home si el usuario ya está logueado */}
         <Route
@@ -50,8 +53,16 @@ function App() {
         <Route
           path='/Inicio'
           element={
-            <PrivateRoute>
+            <PrivateRoute requiresCli={true}>
               <Inicio />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/InicioPro'
+          element={
+            <PrivateRoute requiresPro={true}>
+              <InicioPro />
             </PrivateRoute>
           }
         />

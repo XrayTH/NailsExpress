@@ -1,14 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom'; // Importar Link
+import { Link } from 'react-router-dom';
+import { auth } from '../utils/firebase'; // Asegúrate de que la ruta sea correcta
+import { useDispatch } from 'react-redux'; // Importa useDispatch
+import { logout } from '../features/authSlice'; // Importa logout de authSlice
+import { logoutUser } from '../features/userSlice'; // Importa logoutUser de userSlice
 
+const InicioPro = () => {
+    const dispatch = useDispatch(); // Crea el dispatch
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-// Componente principal
-const HomePage = () => {
+    useEffect(() => {
+        // Verifica el estado de autenticación del usuario
+        const unsubscribe = auth.onAuthStateChanged(user => {
+            setIsAuthenticated(!!user); // Cambia el estado según si hay un usuario
+        });
+
+        return () => unsubscribe(); // Limpiar el listener al desmontar el componente
+    }, []);
+
     useEffect(() => {
         // Configurar meta etiquetas y enlaces al cargar el componente
         document.title = 'PAGINA PRINCIPAL';
 
-        // Crear y añadir meta tags
         const metaCharset = document.createElement('meta');
         metaCharset.setAttribute('charset', 'UTF-8');
         document.head.appendChild(metaCharset);
@@ -58,13 +71,14 @@ const HomePage = () => {
                 display: flex;
                 justify-content: center;
                 align-items: center;
+                
             }
             .overlay img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                opacity: 0.55;
-                background-color: #a959f5;
+                 width: 100%;
+            height: 100%; /* Mantiene la proporción de la imagen */
+            object-fit: cover; /* Asegura que la imagen cubra el área especificada */
+            background-color: #a959f5;
+            opacity: 0.55;
             }
             .hero-content {
                 position: relative;
@@ -84,7 +98,6 @@ const HomePage = () => {
         document.head.appendChild(styles);
 
         return () => {
-            // Cleanup function to remove the styles when the component unmounts
             document.head.removeChild(metaCharset);
             document.head.removeChild(metaViewport);
             document.head.removeChild(tailwindLink);
@@ -93,70 +106,59 @@ const HomePage = () => {
         };
     }, []);
 
+    const handleLogout = async () => {
+        await dispatch(logout()); // Despacha la acción de logout
+        await dispatch(logoutUser()); // Despacha la acción de logoutUser
+    };
+
     return (
         <div className="bg-gray-100">
-            <Navbar />
-            <HeroSection />
+            <Navbar onLogout={handleLogout} />
+            <HeroSection isAuthenticated={isAuthenticated} />
             <CallToAction />
             <Testimonials />
         </div>
     );
 };
 
-// Componente de la barra de navegación
-const Navbar = () => {
+const Navbar = ({ onLogout }) => {
     return (
         <header className="bg-pink-600 text-white shadow-md">
             <div className="container mx-auto p-4 flex justify-between items-center">
                 <h1 className="text-3xl font-semibold">Nails Express</h1>
-                
                 <div>
-                    <Link to="/login">
+                <Link to="/Perfil">
                         <button className="bg-white text-purple-500 py-2 px-4 rounded-full hover:bg-gray-200 mr-2">
-                            Iniciar sesión
+                            Ver Perfil
                         </button>
                     </Link>
-                    <Link to="/registro">
-                        <button className="bg-white text-purple-500 py-2 px-4 rounded-full hover:bg-gray-200">
-                            Registrarse
+                    <Link to="/Mapa">
+                        <button className="bg-white text-purple-500 py-2 px-4 rounded-full hover:bg-gray-200 mr-2">
+                            Ver Solicitudes
                         </button>
                     </Link>
+                    <button onClick={onLogout} className="bg-white text-purple-500 py-2 px-4 rounded-full hover:bg-gray-200 mr-2">
+                        Cerrar Sesión
+                    </button>
+                    <div style={{ fontSize: '1.125rem' }}>Nombre usuario | Profesional</div>
                 </div>
             </div>
         </header>
     );
 };
 
-// Componente de la sección hero
-const HeroSection = () => {
-    const images = [
-        'https://www.cursosypostgrados.com/blog/wp-content/uploads/2024/09/manicura-chicadeazul.webp',
-        'https://cms.modumb.com/storage/magazine/_800x422/manicura-3102.jpg',
-        'https://media.istockphoto.com/photos/pink-red-manicure-and-makeup-picture-id899104114?k=6&m=899104114&s=612x612&w=0&h=eO5CZpp75TP9lyrBfH6TuT00wnGoYAhdp0ff9GuODIs=',
-        'https://images.squarespace-cdn.com/content/v1/51a00dbce4b0d31a97ad5f09/1570368832331-805SXMFAE8F05W6XID33/iStock-171378559+(1).jpg',
-        'https://th.bing.com/th/id/OIP.x0NEmg8BTa-D0PaxePFJcgHaEK?rs=1&pid=ImgDetMain'
-    ];
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
-        }, 5000); // Cambia de imagen cada 5 segundos
-
-        return () => clearInterval(interval); // Limpia el intervalo al desmontar el componente
-    }, [images.length]);
-
+const HeroSection = ({ isAuthenticated }) => {
     return (
         <section className="hero-bg">
             <div className="overlay">
-            <img src={images[currentImageIndex]} alt="Hero imagen" />
+                <img src="https://cms.modumb.com/storage/magazine/_800x422/manicura-3102.jpg" alt="foto" />
             </div>
             <div className="hero-content text-center text-white">
-                <h2 className="text-5xl font-semibold mb-4">Manicure a domicilio</h2>
-                <p className="text-xl mb-8">Reserva tu servicio con los mejores profesionales cerca de ti</p>
-                <Link to="/login">
+                <h2 className="text-5xl font-semibold mb-4">{isAuthenticated ? 'Bienvenido de nuevo!' : 'Manicure a Domicilio'}</h2>
+                <p className="text-xl mb-8">{isAuthenticated ? 'Gracias por ser parte de nuestra comunidad.' : 'Reserva tu servicio con los mejores profesionales cerca de ti'}</p>
+                <Link to="/Mapa">
                     <button className="btn-gradient text-white py-3 px-6 rounded-full text-lg">
-                        Inicia sesión para reservar
+                        {isAuthenticated ? 'Explorar Servicios' : 'Reserva Ahora'}
                     </button>
                 </Link>
             </div>
@@ -164,15 +166,14 @@ const HeroSection = () => {
     );
 };
 
-// Componente de llamada a la acción
 const CallToAction = () => {
     return (
         <section className="bg-pink-100 py-12">
             <div className="container mx-auto text-center">
-                <h3 className="text-4xl font-semibold text-gray-800 mb-6">Encuentra a los mejores profesionales cerca de ti</h3>
+                <h3 className="text-4xl font-semibold text-gray-800 mb-6">Encuentra a tus clientes cerca de ti</h3>
                 <Link to="/mapa">
                     <button className="btn-gradient text-white py-3 px-6 rounded-full text-lg">
-                        Ver Profesionales
+                        Ver Clientes
                     </button>
                 </Link>
             </div>
@@ -180,27 +181,26 @@ const CallToAction = () => {
     );
 };
 
-// Componente de testimonios
 const Testimonials = () => {
     const testimonios = [
         {
-            texto: 'El servicio fue excelente, la profesional llegó a tiempo y el resultado fue espectacular. Recomendado 100%.',
-            autor: 'Andrea P.'
+            texto: 'Trabajar a través de esta plataforma ha sido una experiencia enriquecedora. Mis clientes están satisfechos y las reservas son fáciles de gestionar.',
+            autor: 'Juan M.| estilista'
         },
         {
-            texto: 'Nunca pensé que una manicura a domicilio sería tan conveniente y de tan alta calidad. Definitivamente volveré a reservar.',
-            autor: 'Luisa G.'
+            texto: 'Me ha permitido ampliar mi base de clientes sin preocuparme por el manejo de pagos. ¡Es perfecto para los profesionales!',
+            autor: 'Carla S.| manicurista'
         },
         {
-            texto: 'Fácil de usar, profesionales amables y resultados increíbles. ¡Lo mejor que he probado en servicios de belleza!',
-            autor: 'Carmen T.'
+            texto: 'Gracias a esta plataforma, tengo la libertad de organizar mis horarios y ofrecer un servicio personalizado. Es una gran herramienta para profesionales.',
+            autor: 'Miguel R.| masajista'
         }
     ];
 
     return (
         <section className="testimonios-bg py-12">
             <div className="container mx-auto text-center">
-                <h3 className="text-3xl font-semibold text-gray-800 mb-6">Lo que dicen nuestros clientes</h3>
+                <h3 className="text-3xl font-semibold text-gray-800 mb-6">Lo que dicen nuestros Profesionales</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {testimonios.map((testimonio, index) => (
                         <div key={index} className="bg-white p-6 rounded-lg shadow-lg">
@@ -215,4 +215,4 @@ const Testimonials = () => {
 };
 
 
-export default HomePage;
+export default InicioPro;

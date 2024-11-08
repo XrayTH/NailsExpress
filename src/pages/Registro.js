@@ -10,6 +10,7 @@ const Registro = () => {
     const navigate = useNavigate();
     const [role, setRole] = useState('cliente');
     const [error, setError] = useState('');
+    const backgroundImageUrl = "https://www.cursosypostgrados.com/blog/wp-content/uploads/2024/09/manicura-chicadeazul.webp";
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -103,9 +104,8 @@ const Registro = () => {
             height: "100vh",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
+            backgroundImage: `url(${backgroundImageUrl})`,
             alignItems: "center",
-            background: "url('Nails imagen.jpg') no-repeat center center fixed",
             backgroundSize: "cover",
         },
         header: {
@@ -154,6 +154,7 @@ const Registro = () => {
             borderRadius: "9999px",
             marginTop: "1rem",
             transition: "background 0.3s ease",
+            cursor: 'pointer',
         },
         errorText: {
             color: 'red',
