@@ -1,5 +1,6 @@
+/* eslint-disable no-unused-vars */
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { auth } from '../utils/firebase'; // Verifica que la ruta sea correcta
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useDispatch, useSelector } from 'react-redux';
@@ -102,7 +103,7 @@ const LoginPage = () => {
             position: "relative",
         },
         header: {
-            backgroundColor: '#ec4899',
+            backgroundColor: '#DB2777',
             color: '#fff',
             padding: '1rem',
             textAlign: 'left',
@@ -165,13 +166,20 @@ const LoginPage = () => {
     return (
         <div>
             <header style={styles.header}>
-                <h1 style={{ textAlign: 'left' }}>Nails Express</h1>
+            <Link to="/">
+            <img 
+                    src="https://i.imgur.com/QJTUutm.png" 
+                    alt="Logo Nails Express" 
+                    className="object-contain" 
+    style={{ height: '50px', width: '200px' }}
+                />
+                </Link>
             </header>
 
             <div style={styles.loginPage}>
                 <div style={styles.overlay}>
                     <div style={styles.formContainer}>
-                        <h2 style={styles.formTitle}>Inicio de Sesión</h2>
+                        <h2 style={styles.formTitle}>Inicio de sesión</h2>
                         <form onSubmit={handleLogin}>
                             <label htmlFor="email" style={styles.formLabel}>Email</label>
                             <input

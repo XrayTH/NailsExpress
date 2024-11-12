@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { auth, createUserWithEmailAndPassword } from '../utils/firebase';
 import { login } from '../features/authSlice';
 import { createProfesional } from '../services/profesionalService';
@@ -109,7 +109,7 @@ const Registro = () => {
             backgroundSize: "cover",
         },
         header: {
-            backgroundColor: '#ec4899',
+            backgroundColor: '#DB2777',
             color: '#fff',
             padding: '1rem',
             textAlign: 'left',
@@ -165,7 +165,14 @@ const Registro = () => {
     return (
         <div style={styles.registroPage}>
             <header style={styles.header}>
-                <h1>Nails Express</h1>
+            <Link to="/">
+            <img 
+                    src="https://i.imgur.com/QJTUutm.png" 
+                    alt="Logo Nails Express" 
+                    className="object-contain" 
+    style={{ height: '50px', width: '200px' }}
+                />
+                </Link>
             </header>
             <div style={styles.formContainer}>
                 <h2 style={styles.formTitle}>Registro</h2>

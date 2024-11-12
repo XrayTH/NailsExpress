@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom'; // Importar Link
-
+import {  useLocation, Link } from 'react-router-dom'; // Importar Link
+//import logo from './assets/logotipo.png';
 
 // Componente principal
 const HomePage = () => {
@@ -105,11 +105,28 @@ const HomePage = () => {
 
 // Componente de la barra de navegación
 const Navbar = () => {
+    const location = useLocation(); // Obtener la ruta actual
+
+    const handleLogoClick = () => {
+        // Si ya estamos en la página principal, recarga la página
+        if (location.pathname === '/') {
+            window.location.reload();
+        }
+    };
+
     return (
         <header className="bg-pink-600 text-white shadow-md">
             <div className="container mx-auto p-4 flex justify-between items-center">
-                <h1 className="text-3xl font-semibold">Nails Express</h1>
-                
+                 {/* Imagen en lugar del título de texto */}
+                 <Link to="/" onClick={handleLogoClick}>
+                 <img 
+                    src="https://i.imgur.com/QJTUutm.png" 
+                    alt="Logo Nails Express" 
+                    className="object-contain" 
+    style={{ height: '50px', width: '200px' }}
+    
+                />
+                </Link>
                 <div>
                     <Link to="/login">
                         <button className="bg-white text-purple-500 py-2 px-4 rounded-full hover:bg-gray-200 mr-2">
@@ -172,7 +189,7 @@ const CallToAction = () => {
                 <h3 className="text-4xl font-semibold text-gray-800 mb-6">Encuentra a los mejores profesionales cerca de ti</h3>
                 <Link to="/mapa">
                     <button className="btn-gradient text-white py-3 px-6 rounded-full text-lg">
-                        Ver Profesionales
+                        Ver profesionales
                     </button>
                 </Link>
             </div>

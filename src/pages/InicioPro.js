@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { auth } from '../utils/firebase'; // Asegúrate de que la ruta sea correcta
 import { useDispatch } from 'react-redux'; // Importa useDispatch
 import { logout } from '../features/authSlice'; // Importa logout de authSlice
@@ -45,6 +45,7 @@ const InicioPro = () => {
         styles.innerHTML = `
             body {
                 font-family: 'Poppins', sans-serif;
+                
             }
             .hero-bg {
                 background-image: url('/Nails-imagen.jpg');
@@ -71,14 +72,13 @@ const InicioPro = () => {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                
             }
             .overlay img {
-                 width: 100%;
-            height: 100%; /* Mantiene la proporción de la imagen */
-            object-fit: cover; /* Asegura que la imagen cubra el área especificada */
-            background-color: #a959f5;
-            opacity: 0.55;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                opacity: 0.55;
+                background-color: #a959f5;
             }
             .hero-content {
                 position: relative;
@@ -122,25 +122,83 @@ const InicioPro = () => {
 };
 
 const Navbar = ({ onLogout }) => {
+    const [menuOpen, setMenuOpen] = useState(false);
+
+    const toggleMenu = () => {
+        setMenuOpen(!menuOpen);
+    };
+
+    const location = useLocation(); // Obtener la ruta actual
+
+    const handleLogoClick = () => {
+        // Si ya estamos en la página principal, recarga la página
+        if (location.pathname === '/') {
+            window.location.reload();
+        }
+    };
+
+
     return (
-        <header className="bg-pink-600 text-white shadow-md">
+        <header className="bg-pink-600 text-white shadow-md fixed top-0 left-0 w-full z-50">
             <div className="container mx-auto p-4 flex justify-between items-center">
-                <h1 className="text-3xl font-semibold">Nails Express</h1>
-                <div>
-                <Link to="/Perfil">
-                        <button className="bg-white text-purple-500 py-2 px-4 rounded-full hover:bg-gray-200 mr-2">
-                            Ver Perfil
-                        </button>
-                    </Link>
-                    <Link to="/Mapa">
-                        <button className="bg-white text-purple-500 py-2 px-4 rounded-full hover:bg-gray-200 mr-2">
-                            Ver Solicitudes
-                        </button>
-                    </Link>
-                    <button onClick={onLogout} className="bg-white text-purple-500 py-2 px-4 rounded-full hover:bg-gray-200 mr-2">
-                        Cerrar Sesión
+            {/* Imagen en lugar del título de texto */}
+            <Link to="/inicioPro" onClick={handleLogoClick}>
+                 <img 
+                    src="https://i.imgur.com/QJTUutm.png" 
+                    alt="Logo Nails Express" 
+                    className="object-contain" 
+    style={{ height: '50px', width: '200px' }}
+    
+                />
+                </Link>
+
+                {/* Contenedor para el nombre de usuario y el botón */}
+                <div className="flex items-center space-x-4  margin-rigth:10px;">
+                     {/* Mostrar el texto solo cuando el menú esté cerrado */}
+                     {!menuOpen && (
+                        <div className="text-lg">Nombre usuario | Profesional</div>
+                    )}
+                    <button
+                        onClick={toggleMenu}
+                        className="w-10 h-10 flex items-center justify-center bg-white text-pink-600 rounded-full shadow-md focus:outline-none"
+                    >
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
                     </button>
-                    <div style={{ fontSize: '1.125rem' }}>Nombre usuario | Profesional</div>
+                </div>
+            </div>
+
+            {/* Menú lateral */}
+            <div
+                className={`fixed top-0 right-0 h-full bg-pink-600 text-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+                    menuOpen ? 'translate-x-0' : 'translate-x-full'
+                } w-64 z-50`}
+            >
+                <div className="p-6">
+                    {/* Título y botón para cerrar */}
+                    <button
+                        onClick={toggleMenu}
+                        className="text-white absolute top-4 right-4 focus:outline-none"
+                    >
+                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M6 4a1 1 0 000 2h8a1 1 0 100-2H6zM4 10a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zm2 4a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                        </svg>
+                    </button>
+
+                    <h2 className="text-2xl: font-size:1 rem; font-semibold mb-6">Nombre Usuario | Profesional</h2>
+
+                    {/* Opciones del menú */}
+                    <nav className="flex flex-col space-y-4">
+                        <Link to="/Perfil" className="hover:text-gray-200 text-lg">Ver perfil</Link>
+                        <Link to="/Mapa" className="hover:text-gray-200 text-lg">Ver mapa</Link>
+                        <button
+                            onClick={onLogout}
+                            className="hover:text-gray-200 text-lg text-left"
+                        >
+                            Cerrar sesión
+                        </button>
+                    </nav>
                 </div>
             </div>
         </header>
@@ -148,17 +206,34 @@ const Navbar = ({ onLogout }) => {
 };
 
 const HeroSection = ({ isAuthenticated }) => {
+    const images = [
+        'https://www.cursosypostgrados.com/blog/wp-content/uploads/2024/09/manicura-chicadeazul.webp',
+        'https://cms.modumb.com/storage/magazine/_800x422/manicura-3102.jpg',
+        'https://media.istockphoto.com/photos/pink-red-manicure-and-makeup-picture-id899104114?k=6&m=899104114&s=612x612&w=0&h=eO5CZpp75TP9lyrBfH6TuT00wnGoYAhdp0ff9GuODIs=',
+        'https://images.squarespace-cdn.com/content/v1/51a00dbce4b0d31a97ad5f09/1570368832331-805SXMFAE8F05W6XID33/iStock-171378559+(1).jpg',
+        'https://th.bing.com/th/id/OIP.x0NEmg8BTa-D0PaxePFJcgHaEK?rs=1&pid=ImgDetMain'
+    ];
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length);
+        }, 5000); // Cambia de imagen cada 5 segundos
+
+        return () => clearInterval(interval); // Limpia el intervalo al desmontar el componente
+    }, [images.length]);
+
     return (
         <section className="hero-bg">
             <div className="overlay">
-                <img src="https://cms.modumb.com/storage/magazine/_800x422/manicura-3102.jpg" alt="foto" />
+            <img src={images[currentImageIndex]} alt="Hero imagen" />
             </div>
             <div className="hero-content text-center text-white">
                 <h2 className="text-5xl font-semibold mb-4">{isAuthenticated ? 'Bienvenido de nuevo!' : 'Manicure a Domicilio'}</h2>
                 <p className="text-xl mb-8">{isAuthenticated ? 'Gracias por ser parte de nuestra comunidad.' : 'Reserva tu servicio con los mejores profesionales cerca de ti'}</p>
                 <Link to="/Mapa">
                     <button className="btn-gradient text-white py-3 px-6 rounded-full text-lg">
-                        {isAuthenticated ? 'Explorar Servicios' : 'Reserva Ahora'}
+                        {isAuthenticated ? 'Explorar servicios' : 'Reserva Ahora'}
                     </button>
                 </Link>
             </div>
@@ -173,7 +248,7 @@ const CallToAction = () => {
                 <h3 className="text-4xl font-semibold text-gray-800 mb-6">Encuentra a tus clientes cerca de ti</h3>
                 <Link to="/mapa">
                     <button className="btn-gradient text-white py-3 px-6 rounded-full text-lg">
-                        Ver Clientes
+                        Ver clientes
                     </button>
                 </Link>
             </div>
@@ -200,7 +275,7 @@ const Testimonials = () => {
     return (
         <section className="testimonios-bg py-12">
             <div className="container mx-auto text-center">
-                <h3 className="text-3xl font-semibold text-gray-800 mb-6">Lo que dicen nuestros Profesionales</h3>
+                <h3 className="text-3xl font-semibold text-gray-800 mb-6">Lo que dicen nuestros profesionales</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {testimonios.map((testimonio, index) => (
                         <div key={index} className="bg-white p-6 rounded-lg shadow-lg">

@@ -3,6 +3,7 @@
 import React from 'react';
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { Link } from 'react-router-dom';
 //import L from 'leaflet';
 
 // Asegúrate de importar los estilos de Leaflet
@@ -65,6 +66,7 @@ const handleLike = () => {
             color: 'white',
             border: 'none',
             cursor: 'pointer',
+            //marginTop: '20px',
         },
         btnGradientHover: {
             background: 'linear-gradient(90deg, rgba(255, 105, 180, 1) 0%, rgba(127, 27, 221, 1) 100%)',
@@ -75,6 +77,7 @@ const handleLike = () => {
             paddingRight: '10px',
         },
         reviewBox: {
+            marginTop: '20px',
             backgroundColor: '#f7fafc',
             padding: '15px',
             borderRadius: '8px',
@@ -191,11 +194,18 @@ const handleLike = () => {
         <div style={styles.body}>
             {/* Header */}
             <header style={styles.header}>
-                <div style={{ maxWidth: '800px', margin: '0 auto', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h1 style={{ fontSize: '1.875rem', fontWeight: '600' }}>Nails Express</h1>
+                <div style={{ maxWidth: '2000px', margin: '0 auto', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Link to="/inicioPro">
+            <img 
+                    src="https://i.imgur.com/QJTUutm.png" 
+                    alt="Logo Nails Express" 
+                    className="object-contain" 
+    style={{ height: '50px', width: '200px' }}
+                />
+                </Link>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <button style={styles.btnGradient}>Editar</button>
-                        <div style={{ fontSize: '1.125rem' }}>Nombre usuario | Profesional</div>
+                    <div style={{ fontSize: '1.125rem', marginRight:'30px' }}>Nombre usuario | Profesional</div>
+                        <button style={styles.btnGradient }>Editar</button>
                     </div>
                 </div>
             </header>
@@ -322,6 +332,9 @@ const handleLike = () => {
                     <div style={{ ...styles.reviewAndPublicationBox, background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
                         <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#4A5568', marginBottom: '16px' }}>Reseñas</h3>
                         <div style={styles.reviewContainer}>
+                            {/* Textarea para comentarios o publicaciones nuevas */}
+                            <textarea style={styles.textareaBox} placeholder="Escribe tu publicación o comentario aquí..."></textarea>
+                            <button style={styles.btnGradient} >Publicar</button>
                             {/* Cada reseña en su propio contenedor */}
                             <div style={styles.reviewBox}>
                                 <p style={{ color: '#4A5568' }}>"María es increíble, siempre puntual y muy profesional. ¡Recomendadísima!" - Andrea P.</p>
@@ -349,7 +362,7 @@ const handleLike = () => {
                                 <p style={{ color: '#4A5568', marginBottom: '8px' }}>¡Mira los nuevos diseños que tengo para esta temporada! ¡Te encantarán!</p>
                                 <div>
                                 <button 
-                                 style={{ ...styles.btnGradient, display: 'flex', alignItems: 'center' }}
+                                 style={{ ...styles.btnGradient, display: 'flex', alignItems: 'center', marginTop: '20px' }}
                                  onClick={handleLike}
                                 >
                                 <svg 
@@ -386,7 +399,7 @@ const handleLike = () => {
                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 21l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.18L12 21z"/>
                                  </svg>
                                      </button>
-                                    <span style={{ color: '#4A5568', marginLeft: '8px' }}>25 Likes</span>
+                                    <span style={{ color: '#4A5568', marginLeft: '8px'}}>25 Likes</span>
                                 </div>
                             </div>
                         </div>

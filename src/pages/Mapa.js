@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-//import { Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const MapPage = () => {
     const [map, setMap] = useState(null);
@@ -80,7 +80,7 @@ const MapPage = () => {
             display: "flex",
         },
         searchInput: {
-            height: "55%",
+            height: "66%",
             padding: "0.5rem",
             borderRadius: "0.375rem 0 0 0.375rem", // rounded-l-md
             border: "1px solid #ccc",
@@ -155,7 +155,14 @@ const MapPage = () => {
     return (
         <div style={styles.container}>
             <header style={styles.navbar}>
-                <h1 style={styles.navbarTitle}>Nails Express</h1>
+            <Link to="/inicioPro">
+            <img 
+                    src="https://i.imgur.com/QJTUutm.png" 
+                    alt="Logo Nails Express" 
+                    className="object-contain" 
+    style={{ height: '50px', width: '200px' }}
+                />
+                </Link>
                 <div style={styles.navbarSearch}>
                     <input type="text" placeholder="Buscar" style={styles.searchInput} />
                     <button
@@ -171,7 +178,7 @@ const MapPage = () => {
 
             <div style={{ display: "flex", flex: 1, padding: "2rem" }}>
                 <div style={styles.sidebar}>
-                    <h3 style={styles.sidebarTitle}>Filtros de Ubicación</h3>
+                    <h3 style={styles.sidebarTitle}>Filtros de ubicación</h3>
                     <button 
                         id="geolocate" 
                         onClick={handleGeolocate} 
