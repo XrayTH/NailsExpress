@@ -4,19 +4,32 @@ import { auth } from '../utils/firebase'; // Asegúrate de que la ruta sea corre
 import { useDispatch } from 'react-redux'; // Importa useDispatch
 import { logout } from '../features/authSlice'; // Importa logout de authSlice
 import { logoutUser } from '../features/userSlice'; // Importa logoutUser de userSlice
+import { getProfesionalByEmail } from '../services/profesionalService';
 
 const InicioPro = () => {
     const dispatch = useDispatch(); // Crea el dispatch
     const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [nombreUsuario, setNombreUsuario] = useState('');
+
 
     useEffect(() => {
-        // Verifica el estado de autenticación del usuario
         const unsubscribe = auth.onAuthStateChanged(user => {
             setIsAuthenticated(!!user); // Cambia el estado según si hay un usuario
+            if (user) {
+                // Obtener el nombre del profesional usando el correo
+                getProfesionalByEmail(user.email)
+                    .then(profesional => {
+                        setNombreUsuario(profesional.nombre); // Asumiendo que 'nombre' es el campo que quieres mostrar
+                    })
+                    .catch(error => {
+                        console.error('Error fetching professional:', error);
+                    });
+            }
         });
-
-        return () => unsubscribe(); // Limpiar el listener al desmontar el componente
+    
+        return () => unsubscribe();
     }, []);
+    
 
     useEffect(() => {
         // Configurar meta etiquetas y enlaces al cargar el componente
@@ -113,7 +126,8 @@ const InicioPro = () => {
 
     return (
         <div className="bg-gray-100">
-            <Navbar onLogout={handleLogout} />
+            <Navbar onLogout={handleLogout} nombreUsuario={nombreUsuario} />
+
             <HeroSection isAuthenticated={isAuthenticated} />
             <CallToAction />
             <Testimonials />
@@ -121,7 +135,7 @@ const InicioPro = () => {
     );
 };
 
-const Navbar = ({ onLogout }) => {
+const Navbar = ({ onLogout, nombreUsuario }) => {
     const [menuOpen, setMenuOpen] = useState(false);
 
     const toggleMenu = () => {
@@ -137,26 +151,21 @@ const Navbar = ({ onLogout }) => {
         }
     };
 
-
     return (
         <header className="bg-pink-600 text-white shadow-md fixed top-0 left-0 w-full z-50">
             <div className="container mx-auto p-4 flex justify-between items-center">
-            {/* Imagen en lugar del título de texto */}
-            <Link to="/inicioPro" onClick={handleLogoClick}>
-                 <img 
-                    src="https://i.imgur.com/QJTUutm.png" 
-                    alt="Logo Nails Express" 
-                    className="object-contain" 
-    style={{ height: '50px', width: '200px' }}
-    
-                />
+                <Link to="/inicioPro" onClick={handleLogoClick}>
+                    <img 
+                        src="https://i.imgur.com/QJTUutm.png" 
+                        alt="Logo Nails Express" 
+                        className="object-contain" 
+                        style={{ height: '50px', width: '200px' }}
+                    />
                 </Link>
 
-                {/* Contenedor para el nombre de usuario y el botón */}
-                <div className="flex items-center space-x-4  margin-rigth:10px;">
-                     {/* Mostrar el texto solo cuando el menú esté cerrado */}
-                     {!menuOpen && (
-                        <div className="text-lg">Nombre usuario | Profesional</div>
+                <div className="flex items-center space-x-4">
+                    {!menuOpen && (
+                        <div className="text-lg">{nombreUsuario ? `${nombreUsuario} | Profesional` : 'Cargando...'}</div>
                     )}
                     <button
                         onClick={toggleMenu}
@@ -169,14 +178,10 @@ const Navbar = ({ onLogout }) => {
                 </div>
             </div>
 
-            {/* Menú lateral */}
             <div
-                className={`fixed top-0 right-0 h-full bg-pink-600 text-white shadow-lg transform transition-transform duration-300 ease-in-out ${
-                    menuOpen ? 'translate-x-0' : 'translate-x-full'
-                } w-64 z-50`}
+                className={`fixed top-0 right-0 h-full bg-pink-600 text-white shadow-lg transform transition-transform duration-300 ease-in-out ${menuOpen ? 'translate-x-0' : 'translate-x-full'} w-64 z-50`}
             >
                 <div className="p-6">
-                    {/* Título y botón para cerrar */}
                     <button
                         onClick={toggleMenu}
                         className="text-white absolute top-4 right-4 focus:outline-none"
@@ -186,9 +191,8 @@ const Navbar = ({ onLogout }) => {
                         </svg>
                     </button>
 
-                    <h2 className="text-2xl: font-size:1 rem; font-semibold mb-6">Nombre Usuario | Profesional</h2>
+                    <h2 className="text-2xl font-semibold mb-6">{nombreUsuario ? `${nombreUsuario} | Profesional` : 'Cargando...'}</h2>
 
-                    {/* Opciones del menú */}
                     <nav className="flex flex-col space-y-4">
                         <Link to="/Perfil" className="hover:text-gray-200 text-lg">Ver perfil</Link>
                         <Link to="/Mapa" className="hover:text-gray-200 text-lg">Ver mapa</Link>
