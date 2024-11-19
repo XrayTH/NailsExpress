@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux'; // Importa useSelector para acceder al estado
 
 const MapPage = () => {
     const [map, setMap] = useState(null);
+    const userType = useSelector((state) => state.user.userType); // Accede al tipo de usuario
 
     useEffect(() => {
         // Inicializar el mapa
@@ -54,6 +56,9 @@ const MapPage = () => {
             });
         }
     }, [map]);
+
+    // Ruta condicional para el enlace
+    const inicioRoute = userType === 'cliente' ? '/inicio' : '/inicioPro';
 
     // Estilos en línea
     const styles = {
@@ -155,13 +160,13 @@ const MapPage = () => {
     return (
         <div style={styles.container}>
             <header style={styles.navbar}>
-            <Link to="/inicioPro">
-            <img 
-                    src="https://i.imgur.com/QJTUutm.png" 
-                    alt="Logo Nails Express" 
-                    className="object-contain" 
-    style={{ height: '50px', width: '200px' }}
-                />
+                <Link to={inicioRoute}>
+                    <img 
+                        src="https://i.imgur.com/QJTUutm.png" 
+                        alt="Logo Nails Express" 
+                        className="object-contain" 
+                        style={{ height: '50px', width: '200px' }}
+                    />
                 </Link>
                 <div style={styles.navbarSearch}>
                     <input type="text" placeholder="Buscar" style={styles.searchInput} />

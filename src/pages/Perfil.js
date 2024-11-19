@@ -4,6 +4,7 @@ import React from 'react';
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 //import L from 'leaflet';
 
 // Asegúrate de importar los estilos de Leaflet
@@ -17,6 +18,8 @@ const UserProfile = () => {
     const [rating, setRating] = useState(0); // Estado para manejar el puntaje seleccionado
     const [averageRating, setAverageRating] = useState(0); // Promedio de calificación
     const [hoveredTag, setHoveredTag] = useState(null);// etiquetas
+    const tipoUsuario = useSelector((state) => state.user.tipoUsuario);
+    const rutaInicio = tipoUsuario === 'profesional' ? '/inicioPro' : '/inicio';
 
     // Al cargar el componente, obtenemos las calificaciones anteriores del localStorage
     useEffect(() => {
@@ -195,7 +198,7 @@ const handleLike = () => {
             {/* Header */}
             <header style={styles.header}>
                 <div style={{ maxWidth: '2000px', margin: '0 auto', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Link to="/inicioPro">
+                <Link to={rutaInicio}>
             <img 
                     src="https://i.imgur.com/QJTUutm.png" 
                     alt="Logo Nails Express" 
