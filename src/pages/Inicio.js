@@ -7,6 +7,7 @@ import { logoutUser } from '../features/userSlice'; // Importa logoutUser de use
 import { getClienteByEmail } from '../services/clienteService';
 
 
+
 const Inicio = () => {
     const dispatch = useDispatch(); // Crea el dispatch
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -16,20 +17,22 @@ const Inicio = () => {
         const unsubscribe = auth.onAuthStateChanged(user => {
             setIsAuthenticated(!!user);
             if (user) {
-                // Obtener el nombre del cliente usando el correo
+                // Llama al servicio para obtener el cliente por email
                 getClienteByEmail(user.email)
                     .then(cliente => {
-                        setNombreUsuario(cliente.nombre); // Asumiendo que 'nombre' es el campo que quieres mostrar
+                        console.log(cliente); // Verifica la respuesta del cliente
+                        // Ajusta el campo según la estructura de tu cliente (por ejemplo, cliente.username)
+                        setNombreUsuario(cliente.usuario); // Si 'username' es el campo correcto
                     })
                     .catch(error => {
                         console.error('Error fetching client:', error);
                     });
             }
         });
-
+    
         return () => unsubscribe();
     }, []);
-
+    
 
     useEffect(() => {
         // Configurar meta etiquetas y enlaces al cargar el componente
@@ -166,6 +169,7 @@ const Navbar = ({ onLogout, nombreUsuario }) => {
                 <div className="flex items-center space-x-4">
                     {!menuOpen && (
                         <div className="text-lg">{nombreUsuario ? `${nombreUsuario} | Cliente` : 'Cargando...'}</div>
+
                     )}
                     <button
                         onClick={toggleMenu}
@@ -191,7 +195,8 @@ const Navbar = ({ onLogout, nombreUsuario }) => {
                         </svg>
                     </button>
 
-                    <h2 className="text-2xl font-semibold mb-6">{nombreUsuario ? `${nombreUsuario} | Cliente` : 'Cargando...'}</h2>
+                    <div className="text-lg">{nombreUsuario ? `${nombreUsuario} | Cliente` : 'Cargando...'}</div>
+
 
                     <nav className="flex flex-col space-y-4">
                         <Link to="/Perfil" className="hover:text-gray-200 text-lg">Ver perfil</Link>

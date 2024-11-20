@@ -4,6 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { auth, createUserWithEmailAndPassword } from '../utils/firebase';
 import { login } from '../features/authSlice';
 import { createProfesional } from '../services/profesionalService';
+import { createCliente } from '../services/clienteService';
 
 const Registro = () => {
     const dispatch = useDispatch();
@@ -17,19 +18,17 @@ const Registro = () => {
         const email = e.target.email.value;
         const password = e.target.password.value;
         const username = e.target.username.value;
-        const nombre = e.target.nombre?.value; // Solo para profesional
-        const telefono = e.target.telefono?.value;
+        
 
         const additionalData = role === 'profesional' ? {
+            nombre: e.target.nombre.value,
             nombreLocal: e.target.nombreLocal.value,
             telefono: e.target.telefono.value,
             pais: e.target.pais.value,
             departamento: e.target.departamento.value,
             ciudad: e.target.ciudad.value,
             direccion: e.target.direccion.value,
-        } : {
-            telefono
-        };
+        } : {};
 
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -59,7 +58,7 @@ const Registro = () => {
                     usuario: username,
                     email: user.email,
                     contraseña: password,
-                    nombre, // Se agrega el nombre
+                    nombre: additionalData.nombre,
                     nombreLocal: additionalData.nombreLocal,
                     telefono: additionalData.telefono,
                     ubicacion: { lat: latLng.lat, lng: latLng.lng },
@@ -70,11 +69,23 @@ const Registro = () => {
                     usuario: username,
                     email: user.email,
                     contraseña: password,
-                    nombre, // Se agrega el nombre
+                    nombre: additionalData.nombre,
                     nombreLocal: additionalData.nombreLocal,
                     telefono: additionalData.telefono,
                     ubicacion: { lat: latLng.lat, lng: latLng.lng },
                     activo: true,
+                });
+            } else {
+                console.log("Datos para el cliente:", {
+                    usuario: username,
+                    email: user.email,
+                    contraseña: password,
+                });
+
+                await createCliente({
+                    usuario: username,
+                    email: user.email,
+                    contraseña: password,
                 });
             }
 
@@ -83,7 +94,6 @@ const Registro = () => {
                 email: user.email,
                 username,
                 role,
-                nombre, // Se agrega el nombre
                 ...additionalData,
             }));
 

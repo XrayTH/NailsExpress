@@ -19,7 +19,7 @@ const InicioPro = () => {
                 // Obtener el nombre del profesional usando el correo
                 getProfesionalByEmail(user.email)
                     .then(profesional => {
-                        setNombreUsuario(profesional.nombre); // Asumiendo que 'nombre' es el campo que quieres mostrar
+                        setNombreUsuario(profesional.usuario); // Asumiendo que 'nombre' es el campo que quieres mostrar
                     })
                     .catch(error => {
                         console.error('Error fetching professional:', error);
