@@ -5,6 +5,9 @@ import { auth, createUserWithEmailAndPassword } from '../utils/firebase';
 import { login } from '../features/authSlice';
 import { createProfesional } from '../services/profesionalService';
 import { createCliente } from '../services/clienteService';
+import { createProfile } from '../services/profileService';
+import { createPublication } from '../services/publicationService';
+import { createReview } from '../services/reviewService';
 
 const Registro = () => {
     const dispatch = useDispatch();
@@ -75,6 +78,22 @@ const Registro = () => {
                     ubicacion: { lat: latLng.lat, lng: latLng.lng },
                     activo: true,
                 });
+
+                await createProfile({
+                    profesionalEmail: user.email,
+                    titulo: additionalData.nombreLocal,
+                    descripción: "Aqui decribe el como trabajas...",
+                    dirección: additionalData.direccion,
+                    imagen: "",
+                    portada: "",
+                    servicios: [],
+                    ubicación: { lat: latLng.lat, lng: latLng.lng }
+                  })
+
+                  await createPublication(user.email)
+
+                  await createReview((user.email))
+
             } else {
                 console.log("Datos para el cliente:", {
                     usuario: username,
