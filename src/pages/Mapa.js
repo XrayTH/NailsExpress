@@ -178,7 +178,7 @@ const MapPage = () => {
                         Buscar
                     </button>
                 </div>
-                <div style={styles.navbarUser}>Nombre usuario | Profesional</div>
+                <div style={styles.navbarUser}>Nombre usuario | Tipo de usuario </div>
             </header>
 
             <div style={{ display: "flex", flex: 1, padding: "2rem" }}>

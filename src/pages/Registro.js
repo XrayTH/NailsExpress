@@ -8,6 +8,7 @@ import { createCliente } from '../services/clienteService';
 import { createProfile } from '../services/profileService';
 import { createPublication } from '../services/publicationService';
 import { createReview } from '../services/reviewService';
+import { CircularProgress } from '@material-ui/core';
 
 const Registro = () => {
     const dispatch = useDispatch();
