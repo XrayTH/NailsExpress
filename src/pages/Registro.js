@@ -8,7 +8,6 @@ import { createCliente } from '../services/clienteService';
 import { createProfile } from '../services/profileService';
 import { createPublication } from '../services/publicationService';
 import { createReview } from '../services/reviewService';
-import { CircularProgress } from '@material-ui/core';
 
 const Registro = () => {
     const dispatch = useDispatch();
@@ -126,6 +125,10 @@ const Registro = () => {
 
     const handleBack = () => {
         navigate('/');
+    };
+
+    const handleIni = () => {
+        navigate('/Login');
     };
 
     const styles = {
@@ -260,6 +263,7 @@ const Registro = () => {
                     <button type="submit" style={styles.btnGradient}>Registrar</button>
                 </form>
                 <button onClick={handleBack} style={styles.btnGradient}>Volver Atrás</button>
+                <button onClick={handleIni} style={styles.btnGradient}>Iniciar Sesión</button>
             </div>
         </div>
     );

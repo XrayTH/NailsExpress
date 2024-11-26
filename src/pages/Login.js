@@ -92,13 +92,17 @@ const LoginPage = () => {
         navigate('/'); // Redirigir a la página de inicio
     };
 
+    const handleRe = () => {
+        navigate('/Registro'); // Redirigir a la página de inicio
+    };
+
     const styles = {
         loginPage: {
             fontFamily: "'Poppins', sans-serif",
             height: "100vh",
             display: "flex",
             flexDirection: "column",
-            backgroundImage: `url(${backgroundImageUrl})`,
+            backgroundImage: 'url(${backgroundImageUrl})',
             backgroundSize: "cover",
             position: "relative",
         },
@@ -221,6 +225,12 @@ const LoginPage = () => {
                             >
                                 Volver atrás
                             </button> 
+                            <button
+                            type="button"
+                            onClick={handleRe}
+                            style={styles.btnGradient}>
+                                Registro
+                            </button>
                             </>
                             )}
 

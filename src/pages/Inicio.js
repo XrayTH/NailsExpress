@@ -199,6 +199,7 @@ const Navbar = ({ onLogout, nombreUsuario }) => {
 
 
                     <nav className="flex flex-col space-y-4">
+                        <b></b>
                         <Link to="/Mapa" className="hover:text-gray-200 text-lg">Ver mapa</Link>
                         <button
                             onClick={onLogout}
