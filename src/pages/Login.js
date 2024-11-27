@@ -241,14 +241,12 @@ const LoginPage = () => {
                             >
                                 Volver atrás
                             </button> 
-                            <button
-                            type="button"
-                            onClick={handleRe}
-                            style={styles.btnGradient}>
-                                Registro
-                            </button>
                             </>
-                            )}
+                            )}<div style={{ position: 'center', bottom: '10px', right: '10px' }}>
+                            <a href="/registro" style={{ textDecoration: 'underline', cursor: 'pointer', color: '#rgba(127, 27, 221, 1)' }} >
+                                No tiene cuenta ¿Desea Registrarse?
+                            </a>
+                        </div>
 
                             
                         </form>

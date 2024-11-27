@@ -195,7 +195,7 @@ const Navbar = ({ onLogout, nombreUsuario }) => {
                         </svg>
                     </button>
 
-                    <div className="text-lg">{nombreUsuario ? `${nombreUsuario} | Cliente` : 'Cargando...'}</div>
+                    <h2 className="text-2xl font-semibold mb-6">{nombreUsuario ? `${nombreUsuario} | Cliente` : 'Cargando...'}</h2>
 
 
                     <nav className="flex flex-col space-y-4">
