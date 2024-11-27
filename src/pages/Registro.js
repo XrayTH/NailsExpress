@@ -201,12 +201,12 @@ const Registro = () => {
     return (
         <div style={styles.registroPage}>
             <header style={styles.header}>
-            <Link to="/">
-            <img 
+                <Link to="/">
+                <img 
                     src="https://i.imgur.com/QJTUutm.png" 
                     alt="Logo Nails Express" 
                     className="object-contain" 
-    style={{ height: '50px', width: '200px' }}
+                    style={{ height: '50px', width: '200px' }}
                 />
                 </Link>
             </header>
@@ -262,7 +262,7 @@ const Registro = () => {
                             <input type="text" name="direccion" style={styles.formInput} required />
                         </>
                     )}
-{loading ? (
+                        {loading ? (
                         <CircularProgress
                             style={{ color: '#ec4899' }}
                         />
@@ -280,7 +280,7 @@ const Registro = () => {
                     </a>
                 </div>
             </div>
-            </div>
+        </div>
         
     );
 };

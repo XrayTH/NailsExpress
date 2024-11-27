@@ -1,23 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import * as profesionalService from '../services/profesionalService'; 
-import * as clienteService from '../services/clienteService';           
-import * as adminService from '../services/adminService'; 
-import { auth, createUserWithEmailAndPassword } from '../utils/firebase';  
-import { logout } from '../features/authSlice'; // Importa logout de authSlice
-import { logoutUser } from '../features/userSlice'; // Importa logoutUser de userSlice
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import * as profesionalService from '../services/profesionalService';
+import * as clienteService from '../services/clienteService';
+import * as adminService from '../services/adminService';
+import { auth, createUserWithEmailAndPassword } from '../utils/firebase';
+import { logout } from '../features/authSlice';
+import { logoutUser } from '../features/userSlice';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const AdminProfile = () => {
     const [users, setUsers] = useState([]); // Lista de usuarios combinados
     const [searchTerm, setSearchTerm] = useState(''); // Barra de búsqueda
     const [filter, setFilter] = useState('Todos'); // Filtro por tipo de usuario
     const [isModalOpen, setIsModalOpen] = useState(false); // Modal para crear admin
+    const [showStats, setShowStats] = useState(false); // Nuevo estado para estadísticas
+    const canvasRef = useRef(null); // Referencia para el canvas
+    const canvasRefBar = useRef(null); // Referencia para el gráfico de barras
     const [newAdmin, setNewAdmin] = useState({ username: '', email: '', password: '' }); // Datos del nuevo admin
     const dispatch = useDispatch();  // Hook para despachar acciones
     const navigate = useNavigate();  // Hook para la navegación
+
     // Cargar los datos desde los servicios
     useEffect(() => {
         const fetchUsers = async () => {
@@ -33,9 +38,9 @@ const AdminProfile = () => {
                 console.log('Admins:', admins); // Verificar datos de administradores
     
                 const combinedUsers = [
-                    ...clients.map(client => ({ id: client._id, username: client.usuario, email: client.email, type: 'Cliente' })),
-                    ...professionals.map(profesional => ({ id: profesional._id, username: profesional.usuario, email: profesional.email, type: 'Profesional' })),
-                    ...admins.map(admin => ({ id: admin._id, username: admin.usuario, email: admin.email, type: 'Administrador' })),
+                    ...clients.map(client => ({ id: client._id, username: client.usuario, email: client.email, type: 'Cliente', createdAt: client.createdAt })),
+                    ...professionals.map(profesional => ({ id: profesional._id, username: profesional.usuario, email: profesional.email, type: 'Profesional', createdAt: profesional.createdAt })),
+                    ...admins.map(admin => ({ id: admin._id, username: admin.usuario, email: admin.email, type: 'Administrador', createdAt: admin.createdAt })),
                 ];
                 
     
@@ -48,12 +53,12 @@ const AdminProfile = () => {
     
         fetchUsers();
     }, []);
-    
+
     // Filtrar usuarios basados en búsqueda y filtro
     const filteredUsers = users.filter(user => {
-        const matchesSearch = user.username?.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter = filter === 'Todos' || user.type === filter;
-        return matchesSearch && matchesFilter;
+    const matchesSearch = user.username?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filter === 'Todos' || user.type === filter;
+    return matchesSearch && matchesFilter;
     });
 
     // Eliminar un usuario
@@ -66,14 +71,14 @@ const AdminProfile = () => {
             } else if (type === 'Administrador') {
                 await adminService.deleteAdmin(id);
             }
-    
+
             // Actualiza la lista después de eliminar
             setUsers(prevUsers => prevUsers.filter(user => user.id !== id));
         } catch (error) {
             console.error('Error al eliminar usuario:', error);
         }
     };
-    
+
     // Abrir y cerrar modal
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
@@ -86,13 +91,13 @@ const AdminProfile = () => {
 
     const handleNewAdminSubmit = async (e) => {
         e.preventDefault();
-    
+
         const formattedAdmin = {
             usuario: newAdmin.username, // Cambia el nombre de la propiedad
             contraseña: newAdmin.password,
             email: newAdmin.email,
         };
-    
+
         try {
             const createdAdmin = await adminService.createAdmin(formattedAdmin);
             await createUserWithEmailAndPassword(auth, newAdmin.email, newAdmin.password);
@@ -119,8 +124,153 @@ const AdminProfile = () => {
         navigate("/");  
     };
 
+    const getLast30DaysData = useMemo(() => {
+        const now = new Date();
+        const last30Days = Array.from({ length: 30 }, (_, i) => {
+            const date = new Date(now);
+            date.setDate(now.getDate() - i);
+            return date.toISOString().slice(0, 10); // Formato YYYY-MM-DD
+        }).reverse();
+
+        const counts = last30Days.map(date => ({
+            date,
+            count: users.filter(user => user.type === 'Cliente' && user.createdAt?.startsWith(date)).length,
+        }));
+
+        return counts;
+    }, [users]);
+
+    useEffect(() => {
+        if (showStats) {
+            drawChart();
+            drawBarChart();
+        }
+    }, [showStats, getLast30DaysData]);
+
+    
+    // Dibuja el gráfico de pastel
+    const drawChart = () => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const counts = users.reduce((acc, user) => {
+            acc[user.type] = (acc[user.type] || 0) + 1;
+            return acc;
+        }, {});
+
+        const labels = Object.keys(counts);
+        const values = Object.values(counts);
+        const total = values.reduce((acc, value) => acc + value, 0);
+        let startAngle = 0;
+
+        labels.forEach((label, index) => {
+            const sliceAngle = (values[index] / total) * (2 * Math.PI);
+            const color = getColorForIndex(index);
+            ctx.fillStyle = color;
+
+            ctx.beginPath();
+            ctx.moveTo(canvas.width / 2, canvas.height / 2);
+            ctx.arc(canvas.width / 2, canvas.height / 2, 100, startAngle, startAngle + sliceAngle);
+            ctx.fill();
+
+            const textAngle = startAngle + sliceAngle / 2;
+            const x = canvas.width / 2 + Math.cos(textAngle) * 120;
+            const y = canvas.height / 2 + Math.sin(textAngle) * 120;
+
+            ctx.fillStyle = '#000';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x, y);
+            ctx.fillText(`${values[index]} (${((values[index] / total) * 100).toFixed(1)}%)`, x, y + 20);
+
+            startAngle += sliceAngle;
+        });
+    };
+
+    // Dibuja el gráfico de barras
+    const drawBarChart = () => {
+        const canvas = canvasRefBar.current;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const data = getLast30DaysData;
+        const maxCount = Math.max(...data.map(item => item.count), 1);
+
+        const chartWidth = canvas.width - 50;
+        const chartHeight = canvas.height - 100;
+        const barWidth = chartWidth / data.length;
+
+        ctx.font = '8px Arial';
+        ctx.textAlign = 'right';
+
+        data.forEach((item, index) => {
+            const barHeight = (item.count / maxCount) * chartHeight;
+
+            ctx.fillStyle = '#7f1bdd';
+            ctx.fillRect(
+                25 + index * barWidth,
+                canvas.height - barHeight - 25,
+                barWidth - 5,
+                barHeight
+            );
+
+            ctx.fillStyle = '#000';
+            ctx.fillText(item.count, 25 + index * barWidth + barWidth / 2, canvas.height - barHeight - 30);
+
+            const date = new Date(item.date);
+            const formattedDate = `${date.getDate()}/${date.getMonth() + 1}`;
+
+            ctx.save();
+            ctx.translate(25 + index * barWidth + barWidth / 2, canvas.height - 5);
+            ctx.rotate(-Math.PI / -4);
+            ctx.fillText(formattedDate, 0, 0);
+            ctx.restore();
+        });
+    };
+
     
     
+    const getColorForIndex = (index) => {
+        const colors = ['#FF5733', '#33FF57', '#3357FF', '#FF33A1', '#FF8C33'];
+        return colors[index % colors.length];
+    };
+        
+    const userCounts = users.reduce((acc, user) => {
+        acc[user.type] = (acc[user.type] || 0) + 1;
+        return acc;
+    }, {});    
+
+    // Descargar PDF con estadísticas
+    const downloadPDF = () => {
+        const doc = new jsPDF();
+        doc.text('Estadísticas de Usuarios registrados en los ultimos 30 días.', 10, 10);
+        // Obtener los usuarios por tipo
+        const userCounts = users.reduce((acc, user) => {
+            acc[user.type] = (acc[user.type] || 0) + 1;
+            return acc;
+        }, {});
+
+        // Añadir la información de la cantidad de usuarios por tipo al PDF
+        doc.text('Cantidad de usuarios por tipo:', 10, 20);
+        let yPosition = 30;
+        for (let [type, count] of Object.entries(userCounts)) {
+            doc.text(`${type}: ${count} usuarios`, 10, yPosition);
+            yPosition += 10;
+        }
+
+        // Ahora agregamos la tabla de estadísticas de últimos 30 días
+        const data = getLast30DaysData.map(item => [item.date, item.count]);
+        doc.text('Estadísticas de Últimos 30 Días:', 10, yPosition);
+        yPosition += 10;  // Dejar espacio antes de la tabla
+
+        doc.autoTable({
+            startY: yPosition,  // Establecer la posición inicial de la tabla
+            head: [['Fecha', 'Nuevos Clientes']],
+            body: data,
+        });
+        doc.save('Estadisticas_Usuarios.pdf');
+    };
+
     const styles = {
 
         body: {
@@ -218,6 +368,7 @@ const AdminProfile = () => {
         }
         
     };
+
     return (
         <div style={styles.body}>
             {/* Header */}
@@ -315,8 +466,83 @@ const AdminProfile = () => {
                     ))}
                 </div>
             </section>
-        </div>
-    );
+                       {/* Botón para mostrar estadísticas */}
+                       <button
+                style={{
+                    marginTop: '20px',
+                    padding: '10px 20px',
+                    background: 'linear-gradient(90deg, #7f1bdd, #ff69b4)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '25px',
+                    cursor: 'pointer',
+                    marginLeft: '600px',
+                }}
+                onClick={() => setShowStats(!showStats)}
+            >
+                {showStats ? 'Ocultar Estadísticas' : 'Ver Estadísticas'}
+            </button>
+
+            {showStats && (
+                <>
+                <div>
+                        {/* Botón para mostrar estadísticas */}
+                       <button onClick={downloadPDF}
+                style={{
+                    marginTop: '20px',
+                    padding: '10px 20px',
+                    background: 'linear-gradient(90deg, #7f1bdd, #ff69b4)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '25px',
+                    cursor: 'pointer',
+                    marginLeft: '600px',
+                    width: '157px',
+                    marginBottom: '20px',
+                }}   
+            >
+                Descargar PDF
+            </button>
+                     </div>
+                     <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+                     
+                        <div>
+                        <h3 style={{ fontSize: '20px', color: '#060202', fontWeight: 'bold' }}>
+                            Total de Usuarios
+                        </h3>
+                        <canvas
+                            ref={canvasRef}
+                            width="500"
+                            height="300"
+                            style={{
+                                display: 'block',
+                                margin: '20px auto',
+                                border: '1px solid #ccc',
+                            }}
+                        ></canvas>
+                        </div>
+                        <div>
+                        <h3 style={{ fontSize: '20px', color: '#060202', fontWeight: 'bold' }}>
+                            Usuarios Registrados en los Últimos 30 Días.
+                        </h3>
+                        <canvas
+                            ref={canvasRefBar}
+                            width="600"
+                            height="300"
+                            style={{
+                                display: 'block',
+                                margin: '20px auto',
+                                border: '1px solid #ccc',
+                                
+                            }}
+                        ></canvas>
+                        </div>
+                    </div>
+                    
+                </>
+            )}
+    </div>
+            );
 };
 
 export default AdminProfile;
