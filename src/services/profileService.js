@@ -34,7 +34,7 @@ export const createProfile = async (profileData) => {
 // Consultar un perfil por email
 export const getProfileByEmail = async (email) => {
   try {
-    const response = await profileService.get(`/perfiles/email/${email}`);
+    const response = await profileService.get(`/perfiles/${email}`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error fetching profile by email');

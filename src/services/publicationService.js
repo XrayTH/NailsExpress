@@ -13,7 +13,7 @@ export const getAllPublications = async () => {
 // Obtener publicaciones por correo
 export const getPublicationsByEmail = async (email) => {
   try {
-    const response = await profileService.get(`/publicaciones/email/${email}`);
+    const response = await profileService.get(`/publicaciones/${email}`);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error fetching publications by email');
@@ -43,7 +43,7 @@ export const deletePublications = async (email) => {
 // Añadir una nueva publicación
 export const addPublication = async (email, publicationData) => {
   try {
-    const response = await profileService.post(`/publicaciones/${email}/add`, publicationData);
+    const response = await profileService.post(`/publicaciones/${email}/publicaciones`, publicationData);
     return response.data;
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error adding publication');

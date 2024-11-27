@@ -12,7 +12,7 @@ import Mapa from './pages/Mapa';
 import Admin from './pages/Admin';
 import PruebaImagen from './components/pruebas/PruebaImagen';
 import PrivateRoute from './components/seguridad/PrivateRoute'; // Importa el componente de rutas privadas
-import { selectUser } from './features/userSlice'; // Importa el selector para verificar el estado de autenticación
+import { selectUser, selectUserType } from './features/userSlice'; // Importa el selector para verificar el estado de autenticación
 import NotFound from './components/seguridad/NotFound';
 import { selectAuthUser } from './features/authSlice';
 
@@ -29,27 +29,30 @@ const Prueba = () => {
 function App() {
   const user = useSelector(selectUser); 
   const auth = useSelector(selectAuthUser);
-  console.log(Boolean(user && auth))
+  const userType = useSelector(selectUserType)
+  console.log(userType)
 
   return (
     <Router>
       <Routes>
-        {/* Ruta pública */}
-        <Route path='/' element={user && auth ? <Inicio /> : <Home />} />
-         {/* Ruta pública */}
-         <Route path='/' element={user && auth ? <InicioPro /> : <Home />} />
-
-        {/* Redirige a /home si el usuario ya está logueado */}
-        <Route
-          path='/login'
-          element={user && auth ? <Navigate to="/" /> : <Login />}
+        {/* Ruta principal que redirige dependiendo del estado de autenticación */}
+        <Route 
+          path='/' 
+          element={
+            user && auth ? (
+              userType === 'profesional' ? <Navigate to="/InicioPro" /> : <Navigate to="/Inicio" />
+            ) : (
+              <Navigate to="/Home" />
+            )
+          } 
         />
-        <Route
-          path='/Registro'
-          element={user && auth ? <Navigate to="/" /> : <Registro />}
-        />
-
-        {/* Rutas protegidas: solo accesibles si el usuario está logueado */}
+  
+        {/* Rutas públicas */}
+        <Route path='/Home' element={<Home />} />
+        <Route path='/login' element={user && auth ? <Navigate to="/" /> : <Login />} />
+        <Route path='/Registro' element={user && auth ? <Navigate to="/" /> : <Registro />} />
+  
+        {/* Rutas protegidas */}
         <Route
           path='/Inicio'
           element={
@@ -82,7 +85,7 @@ function App() {
             </PrivateRoute>
           }
         />
-
+  
         {/* Ruta protegida solo para administradores */}
         <Route
           path='/Admin'
@@ -92,12 +95,12 @@ function App() {
             </PrivateRoute>
           }
         />
-
+  
         {/* Ruta de pruebas */}
         <Route path='/Pruebas' element={<Prueba />} />
-
+  
         {/* Redirige cualquier ruta desconocida a / */}
-        <Route path="*" element={<NotFound/>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );

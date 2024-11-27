@@ -1,68 +1,216 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Link } from 'react-router-dom';
+import L from 'leaflet';
+import { useLocation, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import 'leaflet/dist/leaflet.css';
-import { getProfileByEmail } from '../services/profileService';
+import { getProfileByEmail, updateProfile } from '../services/profileService';
 import { getProfesionalByEmail } from '../services/profesionalService';
+import { getReviewsByEmail, addReview, getAverageRating } from '../services/reviewService'
+import { getPublicationsByEmail, addPublication } from '../services/publicationService'
 import { selectUser } from '../features/userSlice';  // Ajusta la ruta
+import { uploadImage } from '../services/imageService';
 
+const CustomMap = ({ coordinates, updateLocation }) => {
+    const [markerPosition, setMarkerPosition] = useState({ lat: coordinates.lat, lng: coordinates.lng });
 
+    const customIcon = L.icon({
+        iconUrl: 'https://maps.gstatic.com/mapfiles/ms2/micons/pink-dot.png',
+        iconSize: [32, 32], // Tamaño del ícono
+        iconAnchor: [16, 32], // Punto del ícono que se posiciona en las coordenadas
+        popupAnchor: [0, -32], // Punto desde el cual se abre el popup hacia arriba
+      });
 
-const UserPerfile = ({email}) => {
+    
+    return (
+        <MapContainer
+        center={[markerPosition.lat, markerPosition.lng]}
+        zoom={13}
+        style={{
+            width: '300px',
+            height: '200px',
+            borderRadius: '8px',
+            boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)',
+        }}
+        whenReady={(map) => {
+            map.target.on('click', (e) => {
+                setMarkerPosition({ lat: e.latlng.lat, lng: e.latlng.lng });
+                updateLocation( e.latlng.lat, e.latlng.lng )
+            });
+        }}
+    >
+    
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <Marker position={[markerPosition.lat, markerPosition.lng]} icon={customIcon}>
+            <Popup>Ubicación</Popup>
+        </Marker>
+      </MapContainer>
+    );
+  };
+
+const UserPerfile = () => {
+    const location = useLocation();
     const [rating, setRating] = useState(0);
-    const [averageRating, setAverageRating] = useState(0);
     const [hoveredTag, setHoveredTag] = useState(null);
-    const tipoUsuario = useSelector((state) => state.user.tipoUsuario);
-    const rutaInicio = tipoUsuario === 'profesional' ? '/inicioPro' : '/inicio';
-
-    // Estado para almacenar los datos del perfil del usuario
     const [profesional, setProfesional] = useState('');
     const [profile, setProfile] = useState('');
+    const [reviews, setReviews] = useState([])
+    const [publications, setPublications] = useState([])
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const user = useSelector(selectUser); // Obtener el usuario desde Redux
+    const user = useSelector(selectUser);
+    const tipoUsuario = useSelector((state) => state.user.userType);
+    const [isEditing, setIsEditing] = useState(false);
+    const [newTag, setNewTag] = useState("");
+    const [titulo, setTitulo] = useState('');
+    const [contenido, setContenido] = useState('');
+    const [reviewContent, setReviewContent] = useState('');
+    const [reviewRating, setReviewRating] = useState(5);
 
-    // Obtenemos los datos del usuario desde una API
     useEffect(() => {
-        // Verifica si el usuario está disponible
+        let email = null
+
         if (!user) {
             setError("No se ha iniciado sesión");
             setLoading(false);
             return;
+        }else if(tipoUsuario === 'profesional'){
+            email = user.email;
+        }else{
+            email = location.state?.email
         }
-
-        // Función que simula la obtención de datos
-        const fetchProfeional = async () => {
+    
+        // Función que simula la obtención de datos de manera paralela
+        const fetchData = async () => {
             try {
-                const email = user.email; // Obtener el email del usuario desde Redux
-                const data = await getProfesionalByEmail(email);
-                setProfesional(data);
-              } catch (error) {
-                setError(error.message);
-              } finally {
-                setLoading(false);
-              }
-        };
-
-        const fetchProfile = async () => {
-            try{
-                const email = user.email;
-                const data = await getProfileByEmail(email);
-                setProfile(data);
-            } catch (err) {
-                setError('Error');
+    
+                // Ejecutar ambas solicitudes en paralelo
+                const [profesionalData, profileData, reviewsData, rankingData, publicationsData] = await Promise.all([
+                    getProfesionalByEmail(email),
+                    getProfileByEmail(email),
+                    getReviewsByEmail(email),
+                    getAverageRating(email),
+                    getPublicationsByEmail(email)
+                ]);
+    
+                // Actualizar estados con los datos obtenidos
+                setProfesional(profesionalData);
+                setProfile(profileData);
+                setReviews(reviewsData)
+                setRating(rankingData.promedio)
+                setPublications(publicationsData.listaPublicaciones)
+            } catch (error) {
+                setError(error.message || "Error al obtener datos");
             } finally {
                 setLoading(false);
             }
         };
+    
+        fetchData();
+    }, [user, location, tipoUsuario]);   
+    
+    const handleAddTag = () => {
+        if (newTag && !profile.servicios.includes(newTag.toLowerCase())) {
+            setProfile({
+                ...profile,
+                servicios: [...profile.servicios, newTag.toLowerCase()],
+            });
+            setNewTag(""); // Limpiar el campo de texto
+        }
+    };
+    
+    const handleRemoveTag = (tagToRemove) => {
+        setProfile({
+            ...profile,
+            servicios: profile.servicios.filter((tag) => tag !== tagToRemove),
+        });
+    };
 
-        fetchProfeional();
-        //fetchProfile();
-    }, [user]);
+    const updateLocation = (lat, lng) => {
+        setProfile((prevProfile) => ({
+            ...prevProfile,
+            ubicación: { lat, lng },
+        }));
+        console.log(lat, lng)
+    };
 
-    // Estado que guarda si le gusta o no
-    const [liked, setLiked] = useState(false);
+    const handleSaveProfile = async () => {
+        try {
+            // Verifica si el email está disponible
+            if (!user?.email) {
+                throw new Error('Email no disponible');
+            }
+            console.log(profile)
+    
+            // Realiza la actualización del perfil en la base de datos
+            await updateProfile(user.email, profile); // Llama al método de actualización con el email y el objeto profile actualizado
+    
+            // Puedes mostrar un mensaje de éxito, o realizar otras acciones
+            alert('Perfil actualizado correctamente');
+            
+            // Cambiar el estado de "editar" a "no editar"
+            setIsEditing(false);
+        } catch (error) {
+            console.error('Error al actualizar el perfil:', error);
+            alert('Hubo un error al actualizar el perfil. Intenta nuevamente.');
+        }
+    };   
+
+    const handleAddPublication = async () => {
+        try {
+            // Verifica si el título y contenido no están vacíos
+            if (!titulo || !contenido) {
+                alert('Por favor ingrese un título y contenido para la publicación.');
+                return;
+            }
+    
+            // Llama a la función addPublication pasándole el email del usuario y los datos de la publicación
+            await addPublication(user.email, { titulo, contenido });
+    
+            // Después de agregar la publicación, puedes limpiar los campos
+            setTitulo('');
+            setContenido('');
+    
+            // Actualiza las publicaciones en el estado para reflejar la nueva publicación
+            const updatedPublications = await getPublicationsByEmail(user.email);
+            setPublications(updatedPublications.listaPublicaciones);
+    
+            alert('Publicación realizada con éxito');
+        } catch (error) {
+            console.error('Error al agregar la publicación:', error);
+            alert('Hubo un error al realizar la publicación. Intenta nuevamente.');
+        }
+    };   
+    
+    const handleAddReview = async () => {
+        try {
+            // Verifica si la reseña y calificación son válidas
+            if (!reviewContent || reviewRating < 1 || reviewRating > 5) {
+                alert('Por favor, ingresa una reseña válida y una calificación entre 1 y 5.');
+                return;
+            }
+    
+            // Llama a la función addReview pasándole los datos
+            await addReview(location.state?.email || user.email, {
+                usuarioCliente: user.email,  // Aquí usamos el email del usuario como 'usuarioCliente'
+                contenido: reviewContent,
+                calificación: reviewRating
+            });
+    
+            // Limpiar los campos después de agregar la reseña
+            setReviewContent('');
+            setReviewRating(0);
+    
+            // Actualizar las reseñas en el estado
+            const updatedReviews = await getReviewsByEmail(user.email);
+            setReviews(updatedReviews);
+    
+            alert('Reseña publicada con éxito');
+        } catch (error) {
+            console.error('Error al agregar la reseña:', error);
+            alert('Hubo un error al publicar la reseña. Intenta nuevamente.');
+        }
+    };    
 
     if (loading) {
         return <div>Cargando...</div>; // Puedes mostrar un loader mientras se cargan los datos
@@ -71,29 +219,6 @@ const UserPerfile = ({email}) => {
     if (error) {
         return <div>Error al cargar la información del perfil: {error} </div>; // Manejo de errores si los datos no están disponibles
     }
-
-    // Función para cambiar el estado de 'liked'
-    const handleLike = () => {
-        setLiked(!liked);
-    };
-
-    const handleRating = (index) => {
-        const newRating = index + 1;
-
-        // Guardamos la nueva calificación en el localStorage
-        const savedRatings = JSON.parse(localStorage.getItem('ratings')) || [];
-        savedRatings.push(newRating);
-        localStorage.setItem('ratings', JSON.stringify(savedRatings));
-
-        // Recalculamos el promedio
-        const average = savedRatings.reduce((acc, curr) => acc + curr, 0) / savedRatings.length;
-        setAverageRating(average);
-
-        // Actualizamos la calificación visualmente
-        setRating(newRating);
-    };
-
-    const position = [51.505, -0.09];
 
     const styles = {
         body: {
@@ -233,7 +358,6 @@ const UserPerfile = ({email}) => {
         },
     };
 
-
   // Renderizar el componente Perfil
   return (
         <div>
@@ -241,7 +365,7 @@ const UserPerfile = ({email}) => {
                 {/* Header */}
                 <header style={styles.header}>
                     <div style={{ maxWidth: '2000px', margin: '0 auto', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Link to={rutaInicio}>
+                        <Link to={"/"}>
                             <img
                                 src='https://i.imgur.com/QJTUutm.png'
                                 alt="Logo Nails Express"
@@ -251,49 +375,87 @@ const UserPerfile = ({email}) => {
                         </Link>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
                             <div style={{ fontSize: '1.125rem', marginRight:'30px' }}>
-                                {profesional.usuario || 'Name'} | {'Profesional'}
+                                {profesional.usuario || 'Name'} | {tipoUsuario || 'Tipo'}
                             </div>
-                            <button style={styles.btnGradient}>Editar</button>
+                            {tipoUsuario === "profesional" && (
+                                <button
+                                    style={styles.btnGradient}
+                                    onClick={isEditing ? handleSaveProfile : () => setIsEditing(!isEditing)} // Llama a handleSaveProfile si está en modo edición
+                                >
+                                    {isEditing ? "Guardar" : "Editar"}
+                                </button>
+                                )}
                         </div>
                     </div>
                 </header>
 
-                {/* Contenedor del Perfil Profesional */}
+                {/* Contenedor del Perfil */}
                 <section style={{ ...styles.section, ...styles.container, maxWidth: '1050px', background: 'white', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)', marginTop: '30px' ,padding: '   24px' }}>
 
                     <div style={styles.profileContainer}>
                         {/* Foto de perfil */}
                         <div style={{ textAlign: 'center' }}>
 
-                            <img style={styles.profileImage} src='https://via.placeholder.com/150' alt="Foto de perfil" />
+                        <img
+                            style={styles.profileImage}
+                            src={profile.imagen || profile.imagen !== "" ? process.env.REACT_APP_IMAGES_URL+"/image/"+profile.imagen : 'https://via.placeholder.com/150'}
+                            alt="Foto de perfil"
+                            onClick={() => isEditing && document.getElementById('fileInput').click()}
+                        />
+                        <input
+                            id="fileInput"
+                            type="file"
+                            style={{ display: 'none' }}
+                            onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                    const formData = new FormData();
+                                    formData.append('image', file);
+                                    try {
+                                        const imageUrl = await uploadImage(formData); 
+                                        setProfile((prevProfile) => ({
+                                            ...prevProfile,
+                                            imagen: imageUrl.filename
+                                        }));
+                                    } catch (error) {
+                                        console.error("Error al subir la imagen", error);
+                                    }
+                                }
+                            }}
+                        />
+
                             {/* Nombre y Especialización */}
                             <div style={styles.nameContainer}>
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0' }}>
-                                    {profesional.nombreLocal || 'Nombre del Local'}
+                            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', margin: '0' }}>
+                                {isEditing ? (
+                                    <input 
+                                    type="text" 
+                                    value={profile.titulo} 
+                                    onChange={(e) => setProfile({...profile, titulo: e.target.value})} 
+                                    style={{ fontSize: '1.5rem', width: '100%' }}
+                                    />
+                                ) : (
+                                    profile.titulo || 'Nombre del Local'
+                                )}
                                 </h2>
-                            <p style={{ color: '#4A5568', margin: '0' }}>Especialista en Manicure y Pedicure</p>
-                            {/* Reseñas y Estrellas */}
-                            <div style={styles.ratingContainer}>
+                                {/* Reseñas y Estrellas */}
+                                <div style={styles.ratingContainer}>
                                     {[...Array(5)].map((_, index) => (
                                         <span
                                             key={index}
-                                            className="star"
                                             style={{
                                                 ...styles.star,
                                                 ...(rating > index ? { color: 'yellow' } : {}),
                                             }}
-                                            onMouseEnter={(e) => (e.target.style.color = 'yellow')}
-                                            onMouseLeave={(e) => (e.target.style.color = rating > index ? 'yellow' : '#ddd')}
-                                            onClick={() => handleRating(index)}
                                         >
                                             ★
                                         </span>
                                     ))}
                                 </div>
-                                {/* Mostrar el promedio de las calificaciones */}
-                                <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                                <h4>Calificación: {averageRating.toFixed(1)} / 5</h4>
-                                </div>
+                                    {/* Mostrar el valor de la calificación */}
+                                    <div style={{ marginTop: '10px', textAlign: 'center' }}>
+                                        <h4>Calificación: {rating || 0} </h4>
+                                    </div>
                             </div>
                         </div>
 
@@ -303,72 +465,97 @@ const UserPerfile = ({email}) => {
                             <div style={{ flex: 1, paddingRight: '20px' }}>
                                 <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#4A5568' }}>Descripción</h3>
                                 <p style={{ color: '#4A5568', margin: '8px 0' }}>
-                                    Con más de 5 años de experiencia, experta en técnicas como el gel y acrílico. Ofrece servicios a domicilio en Ciudad de México.
+                                    {isEditing ? (
+                                        <textarea 
+                                        value={profile.descripción} 
+                                        onChange={(e) => setProfile({...profile, descripción: e.target.value})} 
+                                        style={{ width: '100%', height: '100px', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', backgroundColor: '#f7fafc' }}
+                                        />
+                                    ) : (
+                                        profile.descripción
+                                    )}
                                 </p>
                                 {/* Etiquetas interactivas */}
                                 <div style={{ marginTop: '20px' }}>
-                        <span 
-                            style={hoveredTag === 'manicure' ? { ...styles.tag, ...styles.tagHover } : styles.tag}
-                            onMouseEnter={() => setHoveredTag('manicure')}
-                            onMouseLeave={() => setHoveredTag(null)}
-                        >
-                            Manicure
-                        </span>
-                        <span 
-                            style={hoveredTag === 'pedicure' ? { ...styles.tag, ...styles.tagHover } : styles.tag}
-                            onMouseEnter={() => setHoveredTag('pedicure')}
-                            onMouseLeave={() => setHoveredTag(null)}
-                        >
-                            Pedicure
-                        </span>
-                        <span 
-                            style={hoveredTag === 'acrylic' ? { ...styles.tag, ...styles.tagHover } : styles.tag}
-                            onMouseEnter={() => setHoveredTag('acrylic')}
-                            onMouseLeave={() => setHoveredTag(null)}
-                        >
-                            Uñas Acrílicas
-                        </span>
-                        <span 
-                            style={hoveredTag === 'gelish' ? { ...styles.tag, ...styles.tagHover } : styles.tag}
-                            onMouseEnter={() => setHoveredTag('gelish')}
-                            onMouseLeave={() => setHoveredTag(null)}
-                        >
-                            Gelish
-                        </span>
-                        </div>
-
+                                    {isEditing && (
+                                        <div style={{ marginBottom: '10px' }}>
+                                            <input
+                                                type="text"
+                                                value={newTag}
+                                                onChange={(e) => setNewTag(e.target.value)}
+                                                placeholder="Nueva etiqueta"
+                                                style={{
+                                                    padding: '5px 10px',
+                                                    fontSize: '0.875rem',
+                                                    borderRadius: '15px',
+                                                    border: '1px solid #ccc',
+                                                    backgroundColor: '#f7fafc',
+                                                }}
+                                            />
+                                            <button
+                                                onClick={handleAddTag}
+                                                style={{
+                                                    marginLeft: '10px',
+                                                    backgroundColor: '#ec4899',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: '15px',
+                                                    padding: '5px 10px',
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                Añadir
+                                            </button>
+                                        </div>
+                                    )}
+                                    {profile.servicios.map((tag) => (
+                                        <span
+                                            key={tag}
+                                            style={hoveredTag === tag ? { ...styles.tag, ...styles.tagHover } : styles.tag}
+                                            onMouseEnter={() => setHoveredTag(tag)}
+                                            onMouseLeave={() => setHoveredTag(null)}
+                                        >
+                                            {tag.charAt(0).toUpperCase() + tag.slice(1)}
+                                            {isEditing && (
+                                                <button
+                                                    onClick={() => handleRemoveTag(tag)}
+                                                    style={{
+                                                        marginLeft: '5px',
+                                                        background: 'transparent',
+                                                        border: 'none',
+                                                        color: 'red',
+                                                        cursor: 'pointer',
+                                                    }}
+                                                >
+                                                    ×
+                                                </button>
+                                            )}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
 
                         {/* Ubicación */}
                             <div style={{ flex: 1 }}>
-                                    <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#4A5568' }}>Ubicación</h3>
-                                    <p style={{ color: '#4A5568', marginBottom: '16px' }}>Ciudad de México</p>
+                                    <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#4A5568' }}>Direccion</h3>
+                                    <p style={{ color: '#4A5568', marginBottom: '16px' }}>
+                                        {isEditing ? (
+                                            <input 
+                                            type="text" 
+                                            value={profile.dirección} 
+                                            onChange={(e) => setProfile({...profile, dirección: e.target.value})} 
+                                            style={{ width: '100%' }}
+                                            />
+                                        ) : (
+                                            profile.dirección
+                                        )}
+                                        </p>
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                 <div style={{ marginBottom: '10px' }}>
-                            {/* Aquí va la imagen que mencionabas 
-                                <img 
-                                src="https://via.placeholder.com/300x200" 
-                                alt="Mapa de ubicación" 
-                                style={{ 
-                                    borderRadius: '8px', 
-                                    boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)', 
-                                    width: '300px', 
-                                    height: '200px' 
-                                }} 
-                                />*/}
                              </div>
 
                         {/* Aquí va el mapa */}
-                        <MapContainer center={position} zoom={13} style={{ width: '300px', height: '200px', borderRadius: '8px', boxShadow: '0 2px 5px rgba(0, 0, 0, 0.1)' }}>
-                            <TileLayer 
-                            url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' 
-                            />
-                            <Marker position={position}>
-                            <Popup>
-                                Este es un marcador de ubicación.
-                            </Popup>
-                            </Marker>
-                        </MapContainer>
+                        <CustomMap coordinates={profile.ubicación} updateLocation={updateLocation}/>
                         </div>
                             </div>
                         </div>
@@ -379,79 +566,90 @@ const UserPerfile = ({email}) => {
                 {/* Contenedor de Reseñas y Publicaciones */}
                 <section style={{ ...styles.section, ...styles.container , maxWidth: '1100px' }}>
                     <div style={styles.reviewsAndPublications}>
-                        {/* Contenedor de Reseñas con scroll */}
+                        {/* Contenedor de Reseñas */}
                         <div style={{ ...styles.reviewAndPublicationBox, background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
                             <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#4A5568', marginBottom: '16px' }}>Reseñas</h3>
                             <div style={styles.reviewContainer}>
-                                {/* Cada reseña en su propio contenedor */}
-                                <div style={styles.reviewBox}>
-                                    <p style={{ color: '#4A5568' }}>"María es increíble, siempre puntual y muy profesional. ¡Recomendadísima!" - Andrea P.</p>
-                                </div>
-                                <div style={styles.reviewBox}>
-                                    <p style={{ color: '#4A5568' }}>"Excelente servicio, el mejor que he recibido en mucho tiempo." - Carla G.</p>
-                                </div>
-                                <div style={styles.reviewBox}>
-                                    <p style={{ color: '#4A5568' }}>"Siempre ofrece un trabajo de calidad. Estoy encantada con sus servicios." - Lucía R.</p>
-                                </div>
+                                    {tipoUsuario === "cliente" && (
+                                        <div style={styles.reviewBox}>
+                                            <textarea
+                                            style={styles.textareaBox}
+                                            placeholder="Escribe tu reseña aquí..."
+                                            value={reviewContent}
+                                            onChange={(e) => setReviewContent(e.target.value)}
+                                            ></textarea>
+                                            <input
+                                            type="number"
+                                            min="1"
+                                            max="5"
+                                            value={reviewRating}
+                                            onChange={(e) => setReviewRating(parseInt(e.target.value))}
+                                            style={styles.inputRatingBox}
+                                            placeholder="Calificación (1-5)"
+                                            />
+                                            <div style={{ marginTop: '10px' }}>
+                                            <button style={styles.btnGradient} onClick={handleAddReview}>Publicar Reseña</button>
+                                            </div>
+                                            </div>
+                                        )}
+                                {reviews.length === 0 ? (
+                                    <p style={{ color: '#4A5568' }}>No hay reseñas</p>
+                                ) : (
+                                    reviews.map((review, index) => (
+                                        <div key={index} style={styles.reviewBox}>
+                                            <p style={{ color: '#4A5568', fontWeight: 'bold' }}>{review?.usuarioCliente}:</p>
+                                            <p style={{ color: '#4A5568' }}>{review?.contenido}</p>
+                                            <p style={{ color: '#4A5568' }}>
+                                                {
+                                                    Array.from({ length: Math.floor(review?.calificación) }).map((_, index) => (
+                                                        <span key={index}>★</span>
+                                                    ))
+                                                }
+                                            </p>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
 
-                        {/* Contenedor de Publicaciones con scroll y botones */}
+                        {/* Contenedor de Publicaciones */}
                         <div style={{ ...styles.reviewAndPublicationBox, background: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)' }}>
                             <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#4A5568', marginBottom: '16px' }}>Publicaciones Recientes</h3>
                             <div style={styles.publicationsContainer}>
                                 {/* Textarea para comentarios o publicaciones nuevas */}
-                                <textarea style={styles.textareaBox} placeholder="Escribe tu publicación o comentario aquí..."></textarea>
-                                <button style={styles.btnGradient} >Publicar</button>
+                                {tipoUsuario === "profesional" && (
+                                    <>
+                                        <input
+                                        type="text"
+                                        value={titulo}
+                                        onChange={(e) => setTitulo(e.target.value)}
+                                        placeholder="Título aquí..."
+                                        style={styles.inputBox}
+                                        />
 
-                                <div style={styles.publicationBox}>
-                                    <img style={styles.publicationImage} src='https://via.placeholder.com/350x200' alt="Publicación 1" />
-                                    <h4 style={{ fontSize: '1.25rem', fontWeight: '600' }}>¡Nuevos diseños!</h4>
-                                    <p style={{ color: '#4A5568', marginBottom: '8px' }}>¡Mira los nuevos diseños que tengo para esta temporada! ¡Te encantarán!</p>
-                                    <div>
-                                    <button 
-                                    style={{ ...styles.btnGradient, display: 'flex', alignItems: 'center', marginTop: '20px' }}
-                                    onClick={handleLike}
-                                    >
-                                    <svg 
-                                    xmlns="http://www.w3.org/2000/svg" 
-                                    width="24" 
-                                    height="24" 
-                                    fill={liked ? 'red' : 'none'} 
-                                    viewBox="0 0 24 24" 
-                                    stroke={liked ? 'red' : 'currentColor'}
-                                >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 21l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.18L12 21z"/>
-                                    </svg>
-                                        </button>
-                                        <span style={{ color: '#4A5568', marginLeft: '8px' }}>25 Likes</span>
+                                        <textarea
+                                        value={contenido}
+                                        onChange={(e) => setContenido(e.target.value)}
+                                        style={styles.textareaBox}
+                                        placeholder="Escribe tu publicación o comentario aquí..."
+                                        ></textarea>
+
+                                        <button style={styles.btnGradient} onClick={handleAddPublication}>Publicar</button>
+                                    </>
+                                    )}
+                                {/* Mostrar las publicaciones si existen, o un mensaje si está vacío */}
+                                {publications.length === 0 ? (
+                                <p style={{ color: '#4A5568', fontSize: '1rem', fontWeight: '600' }}>No hay publicaciones</p>
+                                ) : (
+                                publications.map((publication, index) => (
+                                    <div key={index} style={styles.publicationBox}>
+                                    <h4 style={{ fontSize: '1.25rem', fontWeight: '600' }}>{publication.titulo}</h4>
+                                    <p style={{ color: '#4A5568', marginBottom: '8px' }}>{publication.contenido}</p>
                                     </div>
-                                </div>
-                                <div style={styles.publicationBox}>
-                                    <img style={styles.publicationImage} src='https://via.placeholder.com/350x200' alt="Publicación 2" />
-                                    <h4 style={{ fontSize: '1.25rem', fontWeight: '600' }}>Ofertas especiales de octubre</h4>
-                                    <p style={{ color: '#4A5568', marginBottom: '8px' }}>Este mes tengo ofertas especiales en servicios de manicure y pedicure. ¡No te lo pierdas!</p>
-                                    <div>
-                                    <button 
-                                    style={{ ...styles.btnGradient, display: 'flex', alignItems: 'center' }}
-                                    onClick={handleLike}
-                                    >
-                                    <svg 
-                                    xmlns='http://www.w3.org/2000/svg' 
-                                    width="24" 
-                                    height="24" 
-                                    fill={liked ? 'red' : 'none'} 
-                                    viewBox="0 0 24 24" 
-                                    stroke={liked ? 'red' : 'currentColor'}
-                                >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 21l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.18L12 21z"/>
-                                    </svg>
-                                        </button>
-                                        <span style={{ color: '#4A5568', marginLeft: '8px'}}>25 Likes</span>
-                                    </div>
-                                </div>
+                                ))
+                                )}
                             </div>
-                        </div>
+                            </div>
                     </div>
                 </section>
             </div>
