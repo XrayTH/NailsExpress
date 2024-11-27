@@ -8,6 +8,7 @@ import { createCliente } from '../services/clienteService';
 import { createProfile } from '../services/profileService';
 import { createPublication } from '../services/publicationService';
 import { createReview } from '../services/reviewService';
+import { CircularProgress } from '@material-ui/core';
 
 const Registro = () => {
     const dispatch = useDispatch();
@@ -15,12 +16,14 @@ const Registro = () => {
     const [role, setRole] = useState('cliente');
     const [error, setError] = useState('');
     const backgroundImageUrl = "https://www.cursosypostgrados.com/blog/wp-content/uploads/2024/09/manicura-chicadeazul.webp";
+    const [loading, setLoading] = useState(false);
 
     const handleRegister = async (e) => {
         e.preventDefault();
         const email = e.target.email.value;
         const password = e.target.password.value;
         const username = e.target.username.value;
+        setLoading(true); // Activar el indicador de carga
         
 
         const additionalData = role === 'profesional' ? {
@@ -198,12 +201,12 @@ const Registro = () => {
     return (
         <div style={styles.registroPage}>
             <header style={styles.header}>
-            <Link to="/">
-            <img 
+                <Link to="/">
+                <img 
                     src="https://i.imgur.com/QJTUutm.png" 
                     alt="Logo Nails Express" 
                     className="object-contain" 
-    style={{ height: '50px', width: '200px' }}
+                    style={{ height: '50px', width: '200px' }}
                 />
                 </Link>
             </header>
@@ -259,13 +262,26 @@ const Registro = () => {
                             <input type="text" name="direccion" style={styles.formInput} required />
                         </>
                     )}
+                        {loading ? (
+                        <CircularProgress
+                            style={{ color: '#ec4899' }}
+                        />
+                    ) : (
+                        <>
+                            <button type="submit" style={styles.btnGradient}>Registrar</button>
 
-                    <button type="submit" style={styles.btnGradient}>Registrar</button>
+                        </>
+                    )}
                 </form>
                 <button onClick={handleBack} style={styles.btnGradient}>Volver Atrás</button>
-                <button onClick={handleIni} style={styles.btnGradient}>Iniciar Sesión</button>
+                <div style={{ position: 'center', bottom: '10px', right: '10px' }}>
+                    <a href="/login" style={{ textDecoration: 'underline', cursor: 'pointer', color: '#rgba(127, 27, 221, 1)' }}>
+                        ¿Ya tiene una cuenta? Inicia Sesión.
+                    </a>
+                </div>
             </div>
         </div>
+        
     );
 };
 

@@ -63,7 +63,7 @@ export const updateProfesional = async (id, profesionalData) => {
 // Eliminar un profesional
 export const deleteProfesional = async (id) => {
   try {
-    await userService.delete(`/profesionales/${id}`);
+    await userService.delete(`/profesional/${id}`);
     return { message: 'Professional deleted successfully' };
   } catch (error) {
     throw new Error(error.response?.data?.message || 'Error deleting professional');

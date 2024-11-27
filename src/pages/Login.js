@@ -9,6 +9,7 @@ import { setUser, selectUserType, setStatus, setError } from '../features/userSl
 import { CircularProgress } from '@material-ui/core';
 import { getClienteByEmail } from '../services/clienteService';
 import { getProfesionalByEmail } from '../services/profesionalService';
+import { getAdminByEmail } from '../services/adminService'; 
 
 const LoginPage = () => {
     const navigate = useNavigate();
@@ -25,7 +26,7 @@ const LoginPage = () => {
     
         try {
             let userTypeDetected = null;
-    
+
             // Verificar si el usuario es un cliente
             try {
                 const clienteData = await getClienteByEmail(email);
@@ -51,11 +52,25 @@ const LoginPage = () => {
                     } else {
                         throw new Error('Profesional no encontrado');
                     }
-                } catch (error) {
-                    console.error("Error al detectar el tipo de usuario:", error);
-                    alert("No se pudo identificar el tipo de usuario.");
-                    setLoading(false);
-                    return;
+                } catch {
+                    // Si no es profesional, intentar verificar si es administrador
+                    try {
+                        const adminData = await getAdminByEmail(email);
+                        if (adminData) {
+                            userTypeDetected = 'admin';
+                            dispatch(setUser({
+                                user: { email, role: 'admin' },
+                                userType: 'admin',
+                            }));
+                        } else {
+                            throw new Error('Administrador no encontrado');
+                        }
+                    } catch (error) {
+                        console.error("Error al detectar el tipo de usuario:", error);
+                        alert("No se pudo identificar el tipo de usuario.");
+                        setLoading(false);
+                        return;
+                    }
                 }
             }
     
@@ -71,13 +86,14 @@ const LoginPage = () => {
     
             // Esperar la actualización del estado de userType y navegar después
             setTimeout(() => {
-                console.log("userTypeDetected after delay:", userTypeDetected);  // Verifica si userTypeDetected es correcto
                 if (userTypeDetected === 'cliente') {
                     navigate('/Inicio');
                 } else if (userTypeDetected === 'profesional') {
                     navigate('/InicioPro');
+                } else if (userTypeDetected === 'admin') {
+                    navigate('/Admin'); // Asegúrate de tener esta ruta configurada
                 }
-            }, 100);  // Puedes ajustar el tiempo si es necesario
+            }, 100);
     
             console.log("Inicio de sesión exitoso con:", email);
         } catch (error) {
@@ -225,14 +241,12 @@ const LoginPage = () => {
                             >
                                 Volver atrás
                             </button> 
-                            <button
-                            type="button"
-                            onClick={handleRe}
-                            style={styles.btnGradient}>
-                                Registro
-                            </button>
                             </>
-                            )}
+                            )}<div style={{ position: 'center', bottom: '10px', right: '10px' }}>
+                            <a href="/registro" style={{ textDecoration: 'underline', cursor: 'pointer', color: '#rgba(127, 27, 221, 1)' }} >
+                                No tiene cuenta ¿Desea Registrarse?
+                            </a>
+                        </div>
 
                             
                         </form>
