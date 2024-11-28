@@ -104,11 +104,13 @@ const Menu = ({ estado, handleGeolocate, domiciles, domicilio, aceptar, cancelar
                     <p><strong>Dirección:</strong> {domicile.direccion}</p>
                     <button
                       style={{
-                        padding: '0.5rem',
-                        backgroundColor: '#28A745',
+                        width: '50%',
+                        padding: '0.75rem',
+                        borderRadius: '8px',
+                        background: 'linear-gradient(90deg, rgba(127, 27, 221, 1) 0%, rgba(255, 105, 180, 1) 100%)',
                         color: 'white',
                         border: 'none',
-                        borderRadius: '4px',
+                        marginBottom: '1rem',
                         cursor: 'pointer',
                       }}
                       onClick={()=>{aceptar(domicile)}}
@@ -125,16 +127,49 @@ const Menu = ({ estado, handleGeolocate, domiciles, domicilio, aceptar, cancelar
             <p><strong>Cliente:</strong> {domicilio.cliente}</p>
             <p><strong>Direccion:</strong> {domicilio.direccion}</p>
             <p><strong>Telefono:</strong> {domicilio.telefono}</p>
-            <button onClick={()=>{cancelar(domicilio)}}>Cancelar</button>
-            <button onClick={()=>{finalizar(domicilio)}}>Completar</button>
+            <button onClick={()=>{cancelar(domicilio)}}
+              style={{
+                width: '50%',
+                padding: '0.75rem',
+                borderRadius: '8px',
+                background: 'linear-gradient(90deg, rgba(127, 27, 221, 1) 0%, rgba(255, 105, 180, 1) 100%)',
+                color: 'white',
+                border: 'none',
+                marginBottom: '1rem',
+                cursor: 'pointer',
+              }}
+              >Cancelar</button>
+            <button onClick={()=>{finalizar(domicilio)}}
+              style={{
+                width: '50%',
+                padding: '0.75rem',
+                borderRadius: '8px',
+                background: 'linear-gradient(90deg, rgba(127, 27, 221, 1) 0%, rgba(255, 105, 180, 1) 100%)',
+                color: 'white',
+                border: 'none',
+                marginBottom: '1rem',
+                cursor: 'pointer',
+              }}
+              >Completar</button>
           </div>;
   
         case 'Cancelado':
           return <div>
-            <p>Cancelado. Se le ha notificado al cliente.</p>
+            <p>Se ha cancelado el domicilio.</p>
             <button onClick={()=>{
               window.location.reload()
-              }}>OK</button>
+              }}
+              style={{
+                width: '50%',
+                padding: '0.75rem',
+                borderRadius: '8px',
+                background: 'linear-gradient(90deg, rgba(127, 27, 221, 1) 0%, rgba(255, 105, 180, 1) 100%)',
+                color: 'white',
+                border: 'none',
+                marginBottom: '1rem',
+                cursor: 'pointer',
+              }}
+              >OK</button>
             </div>;
   
         case 'Completado':
@@ -142,7 +177,18 @@ const Menu = ({ estado, handleGeolocate, domiciles, domicilio, aceptar, cancelar
           <p>Se le ha notificado al cliente que has llegado. Muchas gracias por usar NailsExpress.</p>
           <button onClick={()=>{
             window.location.reload()
-            }}>OK</button>
+            }}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              borderRadius: '8px',
+              background: 'linear-gradient(90deg, rgba(127, 27, 221, 1) 0%, rgba(255, 105, 180, 1) 100%)',
+              color: 'white',
+              border: 'none',
+              marginBottom: '1rem',
+              cursor: 'pointer',
+            }}
+            >OK</button>
           </div>;
   
         default:
@@ -192,7 +238,7 @@ const Menu = ({ estado, handleGeolocate, domiciles, domicilio, aceptar, cancelar
     );
   };  
 
-const MapPagePro = () => {
+  const MapPagePro = () => {
     const [map, setMap] = useState(null);
     const userType = useSelector((state) => state.user.userType);
     const email = useSelector((state) => state.user.user.email);
@@ -201,10 +247,12 @@ const MapPagePro = () => {
     const [markers, setMarkers] = useState([]);
     const [domiciles, setDomiciles] = useState([]);
     const [domicile, setDomicile] = useState({});
-    const [ estado, setEstado ] = useState('')
+    const [estado, setEstado] = useState('');
+    const intervalRef = useRef(null); // Usamos un ref para manejar el intervalo
+    
 
     useEffect(() => {
-        handleGeolocate()
+        handleGeolocate();
         const fetchUser = async () => {
             const userObj = await getUserByEmail(email);
             if (userObj) {
@@ -219,12 +267,12 @@ const MapPagePro = () => {
             const domiciles = await getAllDomicilios();
 
             const formattedMarkers = domiciles
-            .filter(domicile => domicile.estado === "Solicitado")
-            .map(domicile => ({
-                position: [domicile.ubicacionCliente.lat, domicile.ubicacionCliente.lng],
-                title: domicile.cliente,
-                direccion: domicile.direccion
-            }));
+                .filter(domicile => domicile.estado === "Solicitado")
+                .map(domicile => ({
+                    position: [domicile.ubicacionCliente.lat, domicile.ubicacionCliente.lng],
+                    title: domicile.cliente,
+                    direccion: domicile.direccion
+                }));
 
             setMarkers(formattedMarkers);
             setDomiciles(domiciles);
@@ -238,7 +286,6 @@ const MapPagePro = () => {
                 (position) => {
                     const { latitude, longitude } = position.coords;
                     setUserLocation([latitude, longitude]);
-                    console.log([latitude, longitude])
                 },
                 (error) => {
                     alert('No se pudo obtener tu ubicación. Error: ' + error.message);
@@ -250,78 +297,116 @@ const MapPagePro = () => {
     };
 
     const establecerRuta = async (coordenadas) => {
-      handleGeolocate()
-      console.log(userLocation)
+      if (!userLocation) {
+          console.error('La ubicación del usuario no está disponible');
+          return;
+      }
+  
       const [userLat, userLng] = userLocation;
       const { lat: destLat, lng: destLng } = coordenadas;
   
       try {
-          // Hacer una solicitud a la API OSRM para obtener la ruta
           const response = await fetch(
               `https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${destLng},${destLat}?overview=full&geometries=geojson`
           );
   
-          if (!response.ok) {
-              throw new Error(`Error al obtener ruta: ${response.statusText}`);
-          }
+          if (!response.ok) throw new Error(`Error al obtener ruta: ${response.statusText}`);
   
           const data = await response.json();
-  
-          // Obtener las coordenadas de la ruta
           const routeCoordinates = data.routes[0].geometry.coordinates.map(([lng, lat]) => [lat, lng]);
   
-          // Dibujar la ruta en el mapa
+          // Limpiar la ruta anterior
+          if (map._currentRoute) {
+              map.removeLayer(map._currentRoute);
+          }
+  
+          // Trazar la nueva ruta
           const routeLayer = L.polyline(routeCoordinates, {
               color: 'blue',
               weight: 4,
               opacity: 0.7,
           }).addTo(map);
   
-          // Enfocar la vista en la ruta
-          map.fitBounds(routeLayer.getBounds());
-  
-          // Eliminar cualquier ruta previa
-          if (map._currentRoute) {
-              map.removeLayer(map._currentRoute);
-          }
-  
-          // Almacenar la ruta actual en el mapa
+          // Guardar la referencia a la ruta actual
           map._currentRoute = routeLayer;
   
+          // Ajustar vista al nuevo trazado
+          map.fitBounds(routeLayer.getBounds());
       } catch (error) {
           console.error('Error al establecer la ruta:', error);
-          alert('No se pudo trazar la ruta. Por favor, inténtalo nuevamente.');
       }
-  };  
+  };
 
-    const verificarDomicilio = (id) => {}
+    const verificarEstadoDomicilio = (id) => {
+        if (intervalRef.current) clearInterval(intervalRef.current); // Limpiar cualquier intervalo previo
+
+        intervalRef.current = setInterval(async () => {
+            try {
+                const domicilioActualizado = await getDomicilioById(id);
+
+                if (domicilioActualizado.estado !== "Aceptado") {
+                    clearInterval(intervalRef.current);
+                    setEstado(domicilioActualizado.estado); // Cambiar el estado global
+                    return;
+                }
+
+                // Si el estado sigue siendo "Aceptado", actualizamos la ubicación y trazamos la ruta
+                handleGeolocate(); // Actualizar la ubicación del usuario
+                await actualizarUbicacionProfesional(id, {
+                  ubicacionProfesional:{
+                    lat: userLocation[0],
+                    lng: userLocation[1],
+                  }
+                });
+
+                establecerRuta(domicilioActualizado.ubicacionCliente);
+
+            } catch (error) {
+                console.error('Error al verificar el estado del domicilio:', error);
+            }
+        }, 10000);
+    };
 
     const aceptar = (id) => {
-        handleGeolocate()
-        setDomicile(id)
-        setEstado("Aceptado")
+        handleGeolocate();
+        setDomicile(id);
+        setEstado("Aceptado");
         establecerRuta(id.ubicacionCliente)
+
         const fetchDom = async () => {
-          await aceptarDomicilio(id._id, {user, userLocation})
-        }
-        fetchDom()
-    }
+            const domicilioData = {
+                profesional: user,
+                ubicacionProfesional: {
+                    lat: userLocation[0],
+                    lng: userLocation[1],
+                },
+            };
+
+            await aceptarDomicilio(id._id, domicilioData);
+            verificarEstadoDomicilio(id._id); // Iniciar la verificación cada 10 segundos
+        };
+        fetchDom();
+    };
 
     const cancelar = (id) => {
-        setEstado("Cancelado")
-        const fetchDom = async () => {
-          await cancelarDomicilio(id._id)
-        }
-        fetchDom()
-    }
-    
+        setEstado("Cancelado");
+        if (intervalRef.current) clearInterval(intervalRef.current); // Detener el intervalo si se cancela
+        const fetchDom = async () => await cancelarDomicilio(id._id);
+        fetchDom();
+    };
+
     const finalizar = (id) => {
-        setEstado("Completado")
-        const fetchDom = async () => {
-          await completarDomicilio(id._id)
-        }
-        fetchDom()
-    }
+        setEstado("Completado");
+        if (intervalRef.current) clearInterval(intervalRef.current); // Detener el intervalo si se completa
+        const fetchDom = async () => await completarDomicilio(id._id);
+        fetchDom();
+    };
+
+    useEffect(() => {
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current); // Limpiar intervalo al desmontar
+        };
+    }, []);
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#f3f4f6' }}>
@@ -337,17 +422,17 @@ const MapPagePro = () => {
             </header>
 
             <div style={{ display: 'flex', flex: 1, padding: '2rem', gap: '1rem' }}>
-                <Menu 
-                    estado={estado} 
-                    handleGeolocate={handleGeolocate} 
-                    domiciles={domiciles} 
+                <Menu
+                    estado={estado}
+                    handleGeolocate={handleGeolocate}
+                    domiciles={domiciles}
                     domicilio={domicile}
-                    aceptar={aceptar} 
-                    cancelar={cancelar} 
+                    aceptar={aceptar}
+                    cancelar={cancelar}
                     finalizar={finalizar}
                 />
                 <div style={{ flex: 1 }}>
-                    <MapComponent map={map} setMap={setMap} markers={markers} onGeolocate={true} userLocation={userLocation} ruta={establecerRuta}/>
+                    <MapComponent map={map} setMap={setMap} markers={markers} onGeolocate={true} userLocation={userLocation} />
                 </div>
             </div>
         </div>
