@@ -9,6 +9,7 @@ import InicioPro from './pages/InicioPro';
 import Perfil from './pages/Perfil';
 import Registro from './pages/Registro';
 import Mapa from './pages/Mapa';
+import MapaPro from './pages/MapaPro';
 import Admin from './pages/Admin';
 import PruebaImagen from './components/pruebas/PruebaImagen';
 import PrivateRoute from './components/seguridad/PrivateRoute'; // Importa el componente de rutas privadas
@@ -30,7 +31,6 @@ function App() {
   const user = useSelector(selectUser); 
   const auth = useSelector(selectAuthUser);
   const userType = useSelector(selectUserType)
-  console.log(userType)
 
   return (
     <Router>
@@ -74,6 +74,14 @@ function App() {
           element={
             <PrivateRoute>
               <Mapa />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path='/MapaPro'
+          element={
+            <PrivateRoute>
+              <MapaPro />
             </PrivateRoute>
           }
         />

@@ -454,7 +454,7 @@ const UserPerfile = () => {
                                 </div>
                                     {/* Mostrar el valor de la calificación */}
                                     <div style={{ marginTop: '10px', textAlign: 'center' }}>
-                                        <h4>Calificación: {rating || 0} </h4>
+                                        <h4>Calificación: {rating.toFixed(2) || 1} </h4>
                                     </div>
                             </div>
                         </div>

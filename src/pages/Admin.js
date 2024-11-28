@@ -395,7 +395,7 @@ const AdminProfile = () => {
                         style={styles.input}
                     />
                     <button onClick={openModal} style={styles.btnGradient}>
-                        Crear Admin
+                        Crear Usuario
                     </button>
                     <select
                         value={filter}
@@ -414,7 +414,7 @@ const AdminProfile = () => {
                     <div style={styles.modal} onClick={closeModal}>
                         <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
                             <span style={styles.closeBtn} onClick={closeModal}>&times;</span>
-                            <h2>Crear Nuevo Administrador</h2>
+                            <h2>Crear Nuevo Usuario</h2>
                             <form onSubmit={handleNewAdminSubmit}>
                                 <input
                                     type="text"
@@ -459,6 +459,9 @@ const AdminProfile = () => {
                                 <span>{user.username}</span>
                                 <span style={{ color: '#888' }}>{user.type}</span>
                             </div>
+                            <button onClick={() => {}} style={styles.btnGradient}>
+                                Actualizar
+                            </button>
                             <button onClick={() => deleteUser(user.id, user.type)} style={styles.btnGradient}>
                                 Borrar
                             </button>
@@ -484,10 +487,11 @@ const AdminProfile = () => {
             </button>
 
             {showStats && (
-                <>
-                <div>
-                        {/* Botón para mostrar estadísticas */}
-                       <button onClick={downloadPDF}
+    <>
+        <div>
+            {/* Botón para mostrar estadísticas */}
+            <button
+                onClick={downloadPDF}
                 style={{
                     marginTop: '20px',
                     padding: '10px 20px',
@@ -496,51 +500,69 @@ const AdminProfile = () => {
                     border: 'none',
                     borderRadius: '25px',
                     cursor: 'pointer',
-                    marginLeft: '600px',
+                    marginLeft: '500px',
                     width: '157px',
                     marginBottom: '20px',
-                }}   
+                }}
             >
                 Descargar PDF
             </button>
-                     </div>
-                     <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-                     
-                        <div>
-                        <h3 style={{ fontSize: '20px', color: '#060202', fontWeight: 'bold' }}>
-                            Total de Usuarios
-                        </h3>
-                        <canvas
-                            ref={canvasRef}
-                            width="500"
-                            height="300"
-                            style={{
-                                display: 'block',
-                                margin: '20px auto',
-                                border: '1px solid #ccc',
-                            }}
-                        ></canvas>
-                        </div>
-                        <div>
-                        <h3 style={{ fontSize: '20px', color: '#060202', fontWeight: 'bold' }}>
-                            Usuarios Registrados en los Últimos 30 Días.
-                        </h3>
-                        <canvas
-                            ref={canvasRefBar}
-                            width="600"
-                            height="300"
-                            style={{
-                                display: 'block',
-                                margin: '20px auto',
-                                border: '1px solid #ccc',
-                                
-                            }}
-                        ></canvas>
-                        </div>
-                    </div>
-                    
-                </>
-            )}
+            {/* Botón para enviar correo */}
+            <button
+                onClick={() => {
+                    setTimeout(() => alert('Correo Enviado'), 3000);
+                }}
+                style={{
+                    marginTop: '20px',
+                    padding: '10px 20px',
+                    background: 'linear-gradient(90deg, #7f1bdd, #ff69b4)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '25px',
+                    cursor: 'pointer',
+                    marginLeft: '10px',
+                    width: '157px',
+                    marginBottom: '20px',
+                }}
+            >
+                Enviar Correo
+            </button>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+            <div>
+                <h3 style={{ fontSize: '20px', color: '#060202', fontWeight: 'bold' }}>
+                    Total de Usuarios
+                </h3>
+                <canvas
+                    ref={canvasRef}
+                    width="500"
+                    height="300"
+                    style={{
+                        display: 'block',
+                        margin: '20px auto',
+                        border: '1px solid #ccc',
+                    }}
+                ></canvas>
+            </div>
+            <div>
+                <h3 style={{ fontSize: '20px', color: '#060202', fontWeight: 'bold' }}>
+                    Usuarios Registrados en los Últimos 30 Días.
+                </h3>
+                <canvas
+                    ref={canvasRefBar}
+                    width="600"
+                    height="300"
+                    style={{
+                        display: 'block',
+                        margin: '20px auto',
+                        border: '1px solid #ccc',
+                    }}
+                ></canvas>
+            </div>
+        </div>
+    </>
+)}
+
     </div>
             );
 };

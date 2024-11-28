@@ -130,6 +130,7 @@ const Registro = () => {
         navigate('/');
     };
 
+    // eslint-disable-next-line no-unused-vars
     const handleIni = () => {
         navigate('/Login');
     };
