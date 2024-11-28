@@ -82,7 +82,7 @@ const MapComponent = ({ map, setMap, markers, onGeolocate, userLocation }) => {
     return <div id="map" style={{ height: '500px', width: '100%', borderRadius: '8px' }}></div>;
 };
 
-const Menu = ({ estado, handleGeolocate, domiciles, domicilio, aceptarDomicilio, cancelarDomicilio, finalizarDomicilio }) => {
+const Menu = ({ estado, handleGeolocate, domiciles, domicilio, aceptar, cancelar, finalizar }) => {
     const renderContent = () => {
       switch (estado) {
         case '':
@@ -111,7 +111,7 @@ const Menu = ({ estado, handleGeolocate, domiciles, domicilio, aceptarDomicilio,
                         borderRadius: '4px',
                         cursor: 'pointer',
                       }}
-                      onClick={()=>{aceptarDomicilio(domicile)}}
+                      onClick={()=>{aceptar(domicile)}}
                     >
                       Aceptar
                     </button>
@@ -125,8 +125,8 @@ const Menu = ({ estado, handleGeolocate, domiciles, domicilio, aceptarDomicilio,
             <p><strong>Cliente:</strong> {domicilio.cliente}</p>
             <p><strong>Direccion:</strong> {domicilio.direccion}</p>
             <p><strong>Telefono:</strong> {domicilio.telefono}</p>
-            <button onClick={()=>{cancelarDomicilio("ekisde")}}>Cancelar</button>
-            <button onClick={()=>{finalizarDomicilio("ekisde")}}>Completar</button>
+            <button onClick={()=>{cancelar(domicilio)}}>Cancelar</button>
+            <button onClick={()=>{finalizar(domicilio)}}>Completar</button>
           </div>;
   
         case 'Cancelado':
@@ -296,19 +296,31 @@ const MapPagePro = () => {
 
     const verificarDomicilio = (id) => {}
 
-    const aceptarDomicilio = (id) => {
+    const aceptar = (id) => {
         handleGeolocate()
         setDomicile(id)
         setEstado("Aceptado")
         establecerRuta(id.ubicacionCliente)
+        const fetchDom = async () => {
+          await aceptarDomicilio(id._id, {user, userLocation})
+        }
+        fetchDom()
     }
 
-    const cancelarDomicilio = (id) => {
+    const cancelar = (id) => {
         setEstado("Cancelado")
+        const fetchDom = async () => {
+          await cancelarDomicilio(id._id)
+        }
+        fetchDom()
     }
     
-    const finalizarDomicilio = (id) => {
+    const finalizar = (id) => {
         setEstado("Completado")
+        const fetchDom = async () => {
+          await completarDomicilio(id._id)
+        }
+        fetchDom()
     }
 
     return (
@@ -330,9 +342,9 @@ const MapPagePro = () => {
                     handleGeolocate={handleGeolocate} 
                     domiciles={domiciles} 
                     domicilio={domicile}
-                    aceptarDomicilio={aceptarDomicilio} 
-                    cancelarDomicilio={cancelarDomicilio} 
-                    finalizarDomicilio={finalizarDomicilio}
+                    aceptar={aceptar} 
+                    cancelar={cancelar} 
+                    finalizar={finalizar}
                 />
                 <div style={{ flex: 1 }}>
                     <MapComponent map={map} setMap={setMap} markers={markers} onGeolocate={true} userLocation={userLocation} ruta={establecerRuta}/>
