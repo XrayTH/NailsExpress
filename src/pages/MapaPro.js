@@ -248,7 +248,7 @@ const Menu = ({ estado, handleGeolocate, domiciles, domicilio, aceptar, cancelar
     const [domiciles, setDomiciles] = useState([]);
     const [domicile, setDomicile] = useState({});
     const [estado, setEstado] = useState('');
-    const intervalRef = useRef(null); // Usamos un ref para manejar el intervalo
+    const intervalRef = useRef(null); 
     
 
     useEffect(() => {
